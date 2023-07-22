@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"ilserver/transport/dto"
 	"log"
 	"net/http"
 
@@ -58,19 +59,7 @@ const (
 
 	CHOOSING_USERS_CHOSEN
 	CHOOSING_STAGE_IS_OVER
-
-	RESULTS_MATCHED_USERS_GOTTEN
 )
-
-// proto
-// -----------------------------------------------------------------------
-
-type SearchingStartBody struct {
-	Profile struct {
-		Username string `json:"username"`
-		Contact  string `json:"contact"`
-	} `json:"profile"`
-}
 
 // utils
 // -----------------------------------------------------------------------
@@ -149,7 +138,7 @@ func listen(conn *websocket.Conn) {
 func routeWsPack(pack WsPack) ([]byte, error) {
 	if pack.Operation == SEARCHING_START {
 		bytes, _ := json.Marshal(pack.RawBody)
-		var ssBody SearchingStartBody
+		var ssBody dto.CliSearchingStartBodyClient
 		err := json.Unmarshal(bytes, &ssBody)
 
 		if err != nil {

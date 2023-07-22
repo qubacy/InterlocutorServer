@@ -1,4 +1,4 @@
-module iserver
+module ilserver
 
 go 1.19
 
