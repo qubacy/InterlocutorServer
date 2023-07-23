@@ -1,17 +1,18 @@
 package dto
 
 // svr - server
+// TODO: одинаковые ли дто при разных протоколах?
 
 type SvrSearchingStartBody struct{}
 type SvrSearchingStopBody struct{}
 
 type SvrSearchingGameFoundBody struct {
 	FoundGameData struct {
-		LocalProfileId        int   `json:"localProfileId"`
-		StartSessionTime      int64 `json:"startSessionTime"`
-		ChattingStageDuration int64 `json:"chattingStageDuration"`
-		ChoosingStageDuration int64 `json:"choosingStageDuration"`
-		ChattingTopic         int   `json:"chattingTopic"`
+		LocalProfileId        int    `json:"localProfileId"`
+		StartSessionTime      int64  `json:"startSessionTime"`
+		ChattingStageDuration int64  `json:"chattingStageDuration"`
+		ChoosingStageDuration int64  `json:"choosingStageDuration"`
+		ChattingTopic         string `json:"chattingTopic"`
 		ProfilePublicList     []struct {
 			Id       int    `json:"id"`
 			Username string `json:"username"`
@@ -34,4 +35,12 @@ type SvrChoosingStageIsOverBody struct {
 		Id      int    `json:"id"`
 		Contact string `json:"contact"`
 	} `json:"matchedUsers"`
+}
+
+// ***
+
+type SrvErrBody struct {
+	Err struct {
+		Message string `json:"message"`
+	} `json:"error"`
 }

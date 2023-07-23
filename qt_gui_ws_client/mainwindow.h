@@ -18,8 +18,10 @@ public:
 
 private slots:
     void on_pushBtnCon_clicked();
-
     void on_pushBtnSend_clicked();
+
+private slots:
+    void onTextMessageReceived_ws(const QString &message);
 
 private:
     Ui::MainWindow *ui;

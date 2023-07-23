@@ -2,13 +2,19 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"ilserver/service"
+	"ilserver/transport"
 	"ilserver/transport/dto"
+	"ilserver/transport/overWs"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
+
+// TODO: поместить в handler
+var roomService []service.RoomService
 
 func main() {
 	var upgrader = websocket.Upgrader{
@@ -16,6 +22,11 @@ func main() {
 		WriteBufferSize: 1024,
 		// TODO: ограничить время бездействия
 	}
+
+	// ***
+
+	var handler transport.Handler
+	handler.RoomService.BackgroundWork(16 * time.Millisecond)
 
 	// ***
 
@@ -27,7 +38,15 @@ func main() {
 		}
 
 		log.Println("Websocket Connected!")
-		listen(websocket)
+		listen(&handler, websocket) // app, over ws
+	})
+
+	// ***
+
+	http.HandleFunc("/debug/rooms", func(w http.ResponseWriter, r *http.Request) {
+		bytes, _ := json.Marshal(handler.RoomService.Rooms)
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(bytes)
 	})
 
 	// ***
@@ -35,58 +54,13 @@ func main() {
 	http.ListenAndServe(":47777", nil)
 }
 
-/*
-
-Requests:
-- startSearching;
-- stopSearching;
-- sendMessage;
-- leave (during the game);
-- chooseUsers;
-
-
-{"operation":operation_id_int,"body":{"error":{"message": error_text}}}
-
-*/
-
-const (
-	SEARCHING_START int = iota
-	SEARCHING_STOP
-	SEARCHING_GAME_FOUND
-
-	CHATTING_NEW_MESSAGE
-	CHATTING_STAGE_IS_OVER
-
-	CHOOSING_USERS_CHOSEN
-	CHOOSING_STAGE_IS_OVER
-)
-
-// utils
 // -----------------------------------------------------------------------
 
-type WsPack struct {
-	Operation int                    `json:"operation"`
-	RawBody   map[string]interface{} `json:"body"`
-}
-
-type ChatMessage struct {
-}
-
-type ChatRoom struct {
-}
-
-type ErrBody struct {
-	Err struct {
-		Message string `json:"message"`
-	} `json:"error"`
-}
-
-// -----------------------------------------------------------------------
-
-func listen(conn *websocket.Conn) {
+func listen(handler *transport.Handler, conn *websocket.Conn) {
 	for {
 		messageType, messageContent, err := conn.ReadMessage()
 		if messageType != websocket.TextMessage {
+			log.Println(conn.RemoteAddr(), "message type is not text")
 			conn.Close()
 			return
 		}
@@ -103,7 +77,7 @@ func listen(conn *websocket.Conn) {
 
 		log.Println(conn.RemoteAddr(), string(messageContent))
 
-		var pack WsPack
+		var pack overWs.Pack
 		err = json.Unmarshal(messageContent, &pack)
 		if err != nil {
 			// TODO: правильная обработка ошибки синтаксиса пакета
@@ -114,42 +88,40 @@ func listen(conn *websocket.Conn) {
 		log.Println(conn.RemoteAddr(), pack)
 
 		// *** to handle
+		handler.AddConn(conn)
 
-		messageResponse, err := routeWsPack(pack)
+		err = routeWsPack(handler, conn, pack)
 		if err != nil {
 			log.Println(conn.RemoteAddr(), err)
 			conn.Close()
 			return
 		}
-
-		// ***
-
-		if err := conn.WriteMessage(messageType, []byte(messageResponse)); err != nil {
-			log.Println(conn.RemoteAddr(), err)
-			conn.Close()
-			return
-		}
-
 	}
 }
 
 // -----------------------------------------------------------------------
 
-func routeWsPack(pack WsPack) ([]byte, error) {
-	if pack.Operation == SEARCHING_START {
-		bytes, _ := json.Marshal(pack.RawBody)
-		var ssBody dto.CliSearchingStartBodyClient
-		err := json.Unmarshal(bytes, &ssBody)
-
+func routeWsPack(handler *transport.Handler, conn *websocket.Conn, pack overWs.Pack) error {
+	if pack.Operation == transport.SEARCHING_START {
+		bytes, err := json.Marshal(pack.RawBody)
 		if err != nil {
-			return []byte{}, fmt.Errorf("body is invalid")
+			return err
 		}
 
-		log.Println(ssBody)
+		var ssBody dto.CliSearchingStartBodyClient
+		err = json.Unmarshal(bytes, &ssBody)
+		if err != nil {
+			return err
+		}
 
-	} else if pack.Operation == SEARCHING_STOP {
+		handler.SearchingStart(conn, ssBody)
+
+	} else if pack.Operation == transport.SEARCHING_STOP {
+
+	} else if pack.Operation == transport.CHATTING_NEW_MESSAGE {
+
+	} else if pack.Operation == transport.CHOOSING_USERS_CHOSEN {
 
 	}
-
-	return []byte(""), nil
+	return handler.Err(conn, pack.Operation, "operation is unknown")
 }
