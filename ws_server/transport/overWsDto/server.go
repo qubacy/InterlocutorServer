@@ -16,7 +16,7 @@ type SvrSearchingGameFoundBody struct {
 			Id       int    `json:"id"`
 			Username string `json:"username"`
 		} `json:"profilePublicList"`
-	}
+	} `json:"foundGameData"`
 }
 
 type SvrChattingNewMessageBody struct {
