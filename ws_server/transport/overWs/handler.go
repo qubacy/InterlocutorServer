@@ -3,8 +3,10 @@ package overWs
 import (
 	"encoding/json"
 	"fmt"
+	"ilserver/domain"
 	"ilserver/service"
 	"ilserver/transport/overWsDto"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -78,12 +80,13 @@ func (h *CommonHandler) SearchingStart(
 
 	if !reqDto.IsValid() {
 		h.Err(conn, SEARCHING_START, "body parameters are invalid")
-		return fmt.Errorf("SearchingStart, req dto is invalid")
+		return fmt.Errorf("CommonHandler, SearchingStart, req dto is invalid")
 	}
 
 	// ***
 
 	h.RoomService.Mx.Lock()
+
 	available, room := h.RoomService.RoomWithSearchingState()
 	if !available {
 		h.RoomService.AddRoomWithSearchingState()
@@ -92,14 +95,16 @@ func (h *CommonHandler) SearchingStart(
 
 	profile := overWsDto.MakeProfileFromReqDto(h.ProfileIdByConn(conn), reqDto)
 	room.Profiles = append(room.Profiles, profile)
-	h.RoomService.Mx.Unlock()
 
-	// TODO: обновить время LastUpdateTime
+	// TODO: сработает ли? Сделать указатель
+	var searchingState = room.State.(domain.SearchingStateRoom)
+	searchingState.LaunchTime = time.Now()
+
+	h.RoomService.Mx.Unlock()
 
 	// ***
 
-	pack := overWsDto.MakePack(SEARCHING_START, overWsDto.SvrSearchingStartBody{})
-	packBytes, _ := json.Marshal(pack)
+	packBytes := overWsDto.MakePackBytes(SEARCHING_START, overWsDto.SvrSearchingStartBody{})
 	conn.WriteMessage(websocket.TextMessage, packBytes)
 
 	return nil
