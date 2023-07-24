@@ -40,13 +40,13 @@
      <string>Dcon</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit">
+   <widget class="QPlainTextEdit" name="plainTextEditLog">
     <property name="geometry">
      <rect>
       <x>40</x>
       <y>20</y>
       <width>411</width>
-      <height>231</height>
+      <height>101</height>
      </rect>
     </property>
    </widget>
@@ -61,6 +61,16 @@
     </property>
     <property name="text">
      <string>Send</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="plainTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>140</y>
+      <width>391</width>
+      <height>91</height>
+     </rect>
     </property>
    </widget>
   </widget>

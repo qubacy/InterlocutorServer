@@ -1,0 +1,4 @@
+port: "47777"
+
+update_rooms:
+  timeout: 16ms

@@ -39,7 +39,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushBtnCon_clicked()
 {
-    ws->open(QUrl("ws://127.0.0.1:47777"));
+    ws->open(QUrl("wss://f0b7-46-166-88-119.ngrok-free.app/"));
 }
 
 void MainWindow::on_pushBtnSend_clicked()

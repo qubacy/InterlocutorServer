@@ -3,21 +3,35 @@ package service
 import (
 	"encoding/json"
 	"ilserver/domain"
-
-	"ilserver/transport/dto"
-	"ilserver/transport/overWs"
-	"log"
+	"ilserver/transport/overWsDto"
 	"math/rand"
 	"sync"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
+
+type UpdateRoomMessage struct {
+	ProfileId   string
+	BytesResDto []byte
+}
 
 type RoomService struct {
 	Mx    sync.RWMutex
 	Rooms []domain.Room
+
+	// ***
+
+	UpdateRoomMsgs chan UpdateRoomMessage
 }
+
+func NewRoomService() *RoomService {
+	return &RoomService{
+		Mx:             sync.RWMutex{},
+		Rooms:          make([]domain.Room, 0),
+		UpdateRoomMsgs: make(chan UpdateRoomMessage),
+	}
+}
+
+// -----------------------------------------------------------------------
 
 func (rs *RoomService) RoomWithSearchingState() (bool, *domain.Room) {
 	for i := range rs.Rooms {
@@ -29,23 +43,24 @@ func (rs *RoomService) RoomWithSearchingState() (bool, *domain.Room) {
 	return false, nil
 }
 
-// -----------------------------------------------------------------------
-
-// TODO: нужен ли контекст?
-func (rs *RoomService) BackgroundWork(interval time.Duration) {
-	go func() {
-		for {
-			select {
-			case <-time.After(interval):
-				rs.backgroundWorkIteration()
-			}
-		}
-	}()
+func (rs *RoomService) AddRoomWithSearchingState() {
+	currentTime := time.Now()
+	one := domain.Room{
+		State: domain.SearchingStateRoom{
+			RoomState: domain.RoomState{
+				Name:       domain.SEARCHING,
+				LaunchTime: currentTime,
+			},
+			LastUpdateTime: currentTime,
+		},
+	}
+	rs.Rooms = append(rs.Rooms, one)
 }
 
-// TODO: внешняя сущность принимающая Handler
-func (rs *RoomService) backgroundWorkIteration() {
-	log.Println("RoomService, backgroundWorkIteration...")
+// -----------------------------------------------------------------------
+
+func (rs *RoomService) BackgroundUpdateRoomsTick() {
+	//log.Println("RoomService, BackgroundUpdateRoomsTick...")
 
 	// ***
 
@@ -65,9 +80,13 @@ func (rs *RoomService) backgroundWorkIteration() {
 
 func randChattingTopic() string {
 	topics := []string{
-		"кино", "музыка", "настольные игры", "уличные алкоголики", "vape nation",
+		"кино", "музыка",
+		"настольные игры",
+		//...
 	}
-	return topics[rand.Intn(len(topics))]
+
+	index := rand.Intn(len(topics))
+	return topics[index]
 }
 
 // TODO: параметры из конфига, попробовать viper
@@ -93,7 +112,7 @@ func (rs *RoomService) updateRoomWithSearchingState(roomInx int) {
 
 	startSessionTimeUnix := time.Now().Unix()
 
-	var gameFoundBody dto.SvrSearchingGameFoundBody
+	var gameFoundBody overWsDto.SvrSearchingGameFoundBody
 	gameFoundBody.FoundGameData.StartSessionTime = startSessionTimeUnix
 	gameFoundBody.FoundGameData.ChattingStageDuration = 5 * 60 * 1000 // TODO: в конфиг
 	gameFoundBody.FoundGameData.ChoosingStageDuration = 30 * 1000     // TODO: в конфиг
@@ -119,17 +138,21 @@ func (rs *RoomService) updateRoomWithSearchingState(roomInx int) {
 
 		// ***
 
-		c := rs.Rooms[roomInx].Profiles[i].Conn
 		gameFoundBodyBytes, _ := json.Marshal(gameFoundBody)
 		rawBody := make(map[string]interface{})
 		json.Unmarshal(gameFoundBodyBytes, &rawBody)
-		pack := overWs.Pack{
+		pack := overWsDto.Pack{
 			Operation: 2,
 			RawBody:   rawBody,
 		}
 
 		gameFoundPackBytes, _ := json.Marshal(pack)
-		c.WriteMessage(websocket.TextMessage, gameFoundPackBytes)
+		msg := UpdateRoomMessage{
+			ProfileId:   rs.Rooms[roomInx].Profiles[i].Id,
+			BytesResDto: gameFoundPackBytes,
+		}
+
+		rs.UpdateRoomMsgs <- msg
 	}
 }
 

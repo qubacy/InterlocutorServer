@@ -1,10 +1,9 @@
-package dto
+package overWsDto
 
 // svr - server
 // TODO: одинаковые ли дто при разных протоколах?
 
 type SvrSearchingStartBody struct{}
-type SvrSearchingStopBody struct{}
 
 type SvrSearchingGameFoundBody struct {
 	FoundGameData struct {
@@ -39,7 +38,7 @@ type SvrChoosingStageIsOverBody struct {
 
 // ***
 
-type SrvErrBody struct {
+type SvrErrBody struct {
 	Err struct {
 		Message string `json:"message"`
 	} `json:"error"`
