@@ -1,9 +1,0 @@
-# Protocol Description Over WS
-
-##
-
-##
-
-##
-
-##

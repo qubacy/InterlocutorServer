@@ -1,0 +1,17 @@
+# Protocol Over WS 🗑
+
+## Operation
+
+```
+SEARCHING_START        = 0
+SEARCHING_STOP         = 1
+SEARCHING_GAME_FOUND   = 2
+
+CHATTING_NEW_MESSAGE   = 3
+CHATTING_STAGE_IS_OVER = 4
+
+CHOOSING_USERS_CHOSEN  = 5
+CHOOSING_STAGE_IS_OVER = 6
+```
+
+## Body
