@@ -164,10 +164,7 @@ func (h *CommonHandler) ChattingNewMessage(
 	// ***
 
 	resDto := overWsDto.SvrChattingNewMessageBody{
-		Message: struct {
-			SenderId int    "json:\"senderId\""
-			Text     string "json:\"text\""
-		}{
+		Message: overWsDto.SvrMessage{
 			SenderId: localProfileId,
 			Text:     reqDto.Message.Text,
 		},

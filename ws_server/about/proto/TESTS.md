@@ -74,4 +74,19 @@
 }
 ```
 
+## OPS: `Chatting new message`
+
+### Request
+#### `Chatting new message`
+```json
+{
+    "operation": 3,
+    "body": {
+        "message": {
+            "text": "Hello!"
+        }
+    }
+}
+```
+
 ### Response

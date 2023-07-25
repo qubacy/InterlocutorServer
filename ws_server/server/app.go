@@ -120,6 +120,8 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 			return err
 		}
 
+		// TODO: обработку в header, roomServer.Do(DTO)
+
 		var reqDto overWsDto.CliSearchingStartBodyClient
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {

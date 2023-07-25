@@ -6,23 +6,29 @@ import (
 	"ilserver/domain"
 )
 
+// parts
+// -----------------------------------------------------------------------
+type Profile struct {
+	Username string `json:"username"`
+	Contact  string `json:"contact"`
+}
+
+type CliMessage struct {
+	Text string `json:"text"`
+}
+
 // cli - client
 // -----------------------------------------------------------------------
 
 type CliSearchingStartBodyClient struct {
-	Profile struct {
-		Username string `json:"username"`
-		Contact  string `json:"contact"`
-	} `json:"profile"`
+	Profile Profile `json:"profile"`
 }
 
 // not used
 type CliSearchingStopBody struct{}
 
 type CliChattingNewMessageBody struct {
-	Message struct {
-		Text string `json:"text"`
-	} `json:"message"`
+	Message CliMessage `json:"message"`
 }
 
 type CliChoosingUsersChosenBody struct {
@@ -49,7 +55,8 @@ func (dto *CliChoosingUsersChosenBody) IsValid() bool {
 
 func MakeProfileFromReqDto(id string, dto CliSearchingStartBodyClient) domain.Profile {
 	return domain.Profile{
-		Id:       id,
+		Id: id,
+
 		Username: dto.Profile.Username,
 		Contact:  dto.Profile.Contact,
 	}
