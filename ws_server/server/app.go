@@ -6,6 +6,7 @@ import (
 	"ilserver/transport/overWsDto"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -42,7 +43,11 @@ func (s *App) Run() error {
 		}
 
 		log.Println("Ws", websocket.RemoteAddr().String(), "connected")
-		listen(handler, websocket)
+		if err := listen(handler, websocket); err != nil {
+			log.Println("One ws listen err:", err)
+			websocket.Close()
+			return
+		}
 	})
 
 	// *** simple debug http
@@ -66,19 +71,19 @@ func (s *App) Run() error {
 	return s.httpServer.ListenAndServe()
 }
 
-func listen(handler *overWs.CommonHandler, conn *websocket.Conn) {
+func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
+	var once sync.Once
 	for {
 		messageType, messageContent, err := conn.ReadMessage()
+
 		if messageType != websocket.TextMessage {
 			log.Println(conn.RemoteAddr(), "message type is not text")
-			conn.Close()
-			return
+			return handler.RemoveConnAndClose(conn)
 		}
 
 		if err != nil {
 			log.Println(conn.RemoteAddr(), err)
-			conn.Close()
-			return
+			return handler.RemoveConnAndClose(conn)
 		}
 
 		// ***
@@ -87,20 +92,23 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) {
 		err = json.Unmarshal(messageContent, &pack)
 		if err != nil {
 			log.Println(conn.RemoteAddr(), err)
+
 			// TODO: отправить пакет с информацией об ошибки
-			conn.Close()
-			return
+
+			return handler.RemoveConnAndClose(conn)
 		}
 		log.Println(conn.RemoteAddr(), pack)
 
-		// *** to handle
-		handler.AddConn(conn)
+		// ***
+
+		once.Do(func() {
+			handler.AddConn(conn)
+		})
 
 		err = routeWsPack(handler, conn, pack)
 		if err != nil {
 			log.Println(conn.RemoteAddr(), err)
-			conn.Close()
-			return
+			return handler.RemoveConnAndClose(conn)
 		}
 	}
 }
@@ -112,18 +120,28 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 			return err
 		}
 
-		var ssBody overWsDto.CliSearchingStartBodyClient
-		err = json.Unmarshal(bytes, &ssBody)
+		var reqDto overWsDto.CliSearchingStartBodyClient
+		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {
 			return err
 		}
 
-		handler.SearchingStart(conn, ssBody)
-		return nil
+		return handler.SearchingStart(conn, reqDto)
 	} else if pack.Operation == overWs.SEARCHING_STOP {
 
 	} else if pack.Operation == overWs.CHATTING_NEW_MESSAGE {
+		bytes, err := json.Marshal(pack.RawBody)
+		if err != nil {
+			return err
+		}
 
+		var reqDto overWsDto.CliChattingNewMessageBody
+		err = json.Unmarshal(bytes, &reqDto)
+		if err != nil {
+			return err
+		}
+
+		return handler.ChattingNewMessage(conn, reqDto)
 	} else if pack.Operation == overWs.CHOOSING_USERS_CHOSEN {
 
 	}

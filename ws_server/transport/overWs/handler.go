@@ -30,24 +30,37 @@ func NewCommonHandler() *CommonHandler {
 
 // -----------------------------------------------------------------------
 
-func (h *CommonHandler) AddConn(conn *websocket.Conn) error {
+func (h *CommonHandler) AddConn(conn *websocket.Conn) {
 	profileId := uuid.New().String()
 	remoteAddr := conn.RemoteAddr().String()
 
 	// ***
 
+	// profile linked to conn pointer!
 	h.RemoteAddrAndProfileId[remoteAddr] = profileId
 	h.ProfileIdAndConn[profileId] = conn
-
-	// TODO: добавить проверки на уникальность (?)
-
-	h.ProfileIdAndConn[profileId] = conn
-	return nil
 }
 
-func (h *CommonHandler) ProfileIdByConn(conn *websocket.Conn) string {
+func (h *CommonHandler) RemoveConn(conn *websocket.Conn) {
+	available, profileId := h.ProfileIdByConn(conn)
+	if !available {
+		return
+	}
+
+	h.RoomService.RemoveProfileByIdBlocking(profileId)
+}
+
+func (h *CommonHandler) RemoveConnAndClose(conn *websocket.Conn) error {
+	h.RemoveConn(conn)
+
+	conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(1000, "reason"))
+	return conn.Close()
+}
+
+func (h *CommonHandler) ProfileIdByConn(conn *websocket.Conn) (bool, string) {
 	remoteAddr := conn.RemoteAddr().String()
-	return h.RemoteAddrAndProfileId[remoteAddr]
+	id, ok := h.RemoteAddrAndProfileId[remoteAddr]
+	return ok, id
 }
 
 // -----------------------------------------------------------------------
@@ -67,7 +80,9 @@ func (h *CommonHandler) Err(conn *websocket.Conn, opCode int, errText string) er
 	}
 
 	errPackBytes, _ := json.Marshal(errPack)
-	conn.WriteMessage(websocket.TextMessage, errPackBytes)
+	if err := conn.WriteMessage(websocket.TextMessage, errPackBytes); err != nil {
+		return err
+	}
 
 	return conn.Close()
 }
@@ -85,6 +100,7 @@ func (h *CommonHandler) SearchingStart(
 
 	// ***
 
+	// TODO: создать метод в сервисе
 	h.RoomService.Mx.Lock()
 
 	available, room := h.RoomService.RoomWithSearchingState()
@@ -93,19 +109,78 @@ func (h *CommonHandler) SearchingStart(
 		room = &h.RoomService.Rooms[len(h.RoomService.Rooms)-1]
 	}
 
-	profile := overWsDto.MakeProfileFromReqDto(h.ProfileIdByConn(conn), reqDto)
+	available, profileId := h.ProfileIdByConn(conn)
+	if !available {
+		return fmt.Errorf("Profile id is not available")
+	}
+
+	profile := overWsDto.MakeProfileFromReqDto(profileId, reqDto)
 	room.Profiles = append(room.Profiles, profile)
 
-	// TODO: сработает ли? Сделать указатель
+	// ***
+
 	var searchingState = room.State.(domain.SearchingStateRoom)
 	searchingState.LaunchTime = time.Now()
+	room.State = searchingState
 
 	h.RoomService.Mx.Unlock()
 
 	// ***
 
 	packBytes := overWsDto.MakePackBytes(SEARCHING_START, overWsDto.SvrSearchingStartBody{})
-	conn.WriteMessage(websocket.TextMessage, packBytes)
+	return conn.WriteMessage(websocket.TextMessage, packBytes)
+}
 
+func (h *CommonHandler) ChattingNewMessage(
+	conn *websocket.Conn, reqDto overWsDto.CliChattingNewMessageBody) error {
+
+	if !reqDto.IsValid() {
+		h.Err(conn, CHATTING_NEW_MESSAGE, "body parameters are invalid")
+		return fmt.Errorf("CommonHandler, ChattingNewMessage, req dto is invalid")
+	}
+
+	// ***
+
+	available, profileId := h.ProfileIdByConn(conn)
+	if !available {
+		return fmt.Errorf("Profile id is not available")
+	}
+
+	h.RoomService.Mx.Lock()
+
+	available, room := h.RoomService.RoomWithProfileById(profileId)
+	if !available {
+		h.RoomService.Mx.Unlock()
+		return fmt.Errorf("Profile does not belong to the room")
+	}
+
+	var localProfileId int = 0
+	for i := range room.Profiles {
+		if room.Profiles[i].Id == profileId {
+			localProfileId = i
+		}
+	}
+
+	// ***
+
+	resDto := overWsDto.SvrChattingNewMessageBody{
+		Message: struct {
+			SenderId int    "json:\"senderId\""
+			Text     string "json:\"text\""
+		}{
+			SenderId: localProfileId,
+			Text:     reqDto.Message.Text,
+		},
+	}
+
+	packBytes := overWsDto.MakePackBytes(CHATTING_NEW_MESSAGE, resDto)
+	for i := range room.Profiles {
+		c := h.ProfileIdAndConn[room.Profiles[i].Id]
+		if err := c.WriteMessage(websocket.TextMessage, packBytes); err != nil {
+			h.RemoveConnAndClose(c)
+		}
+	}
+
+	h.RoomService.Mx.Unlock()
 	return nil
 }

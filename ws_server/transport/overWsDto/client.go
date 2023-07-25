@@ -1,5 +1,7 @@
 package overWsDto
 
+// TODO: общие DTOs независимо от протокола?
+
 import (
 	"ilserver/domain"
 )

@@ -15,7 +15,9 @@ type UpdateRoomMessage struct {
 }
 
 type RoomService struct {
-	Mx    sync.RWMutex
+	Mx sync.RWMutex
+
+	// TODO: преобразовать в список
 	Rooms []domain.Room
 
 	// ***
@@ -32,6 +34,32 @@ func NewRoomService() *RoomService {
 }
 
 // -----------------------------------------------------------------------
+
+func (rs *RoomService) RemoveProfileByIdBlocking(profileId string) {
+	rs.Mx.Lock()
+	for i := range rs.Rooms {
+		for j := range rs.Rooms[i].Profiles {
+			if rs.Rooms[i].Profiles[j].Id == profileId {
+
+				rs.Rooms[i].Profiles =
+					append(rs.Rooms[i].Profiles[:j],
+						rs.Rooms[i].Profiles[j+1:]...)
+			}
+		}
+	}
+	rs.Mx.Unlock()
+}
+
+func (rs *RoomService) RoomWithProfileById(profileId string) (bool, *domain.Room) {
+	for i := range rs.Rooms {
+		for j := range rs.Rooms[i].Profiles {
+			if rs.Rooms[i].Profiles[j].Id == profileId {
+				return true, &rs.Rooms[i]
+			}
+		}
+	}
+	return false, nil
+}
 
 func (rs *RoomService) RoomWithSearchingState() (bool, *domain.Room) {
 	for i := range rs.Rooms {
