@@ -75,6 +75,7 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 	var once sync.Once
 	for {
 		messageType, messageContent, err := conn.ReadMessage()
+		log.Println(string(messageContent))
 
 		if messageType == websocket.CloseMessage {
 			return handler.RemoveConnAndClose(conn)
