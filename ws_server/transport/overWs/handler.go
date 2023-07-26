@@ -84,7 +84,7 @@ func (h *CommonHandler) Err(conn *websocket.Conn, opCode int, errText string) er
 		return err
 	}
 
-	return conn.Close()
+	return h.RemoveConnAndClose(conn)
 }
 
 // -----------------------------------------------------------------------
@@ -129,6 +129,12 @@ func (h *CommonHandler) SearchingStart(
 
 	packBytes := overWsDto.MakePackBytes(SEARCHING_START, overWsDto.SvrSearchingStartBody{})
 	return conn.WriteMessage(websocket.TextMessage, packBytes)
+}
+
+func (h *CommonHandler) SearchingStop(
+	conn *websocket.Conn, reqDto overWsDto.CliSearchingStopBody) {
+
+	//return h.RemoveConnAndClose(conn)
 }
 
 func (h *CommonHandler) ChattingNewMessage(

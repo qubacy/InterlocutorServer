@@ -76,6 +76,10 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 	for {
 		messageType, messageContent, err := conn.ReadMessage()
 
+		if messageType == websocket.CloseMessage {
+			return handler.RemoveConnAndClose(conn)
+		}
+
 		if messageType != websocket.TextMessage {
 			log.Println(conn.RemoteAddr(), "message type is not text")
 			return handler.RemoveConnAndClose(conn)
@@ -130,6 +134,19 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 
 		return handler.SearchingStart(conn, reqDto)
 	} else if pack.Operation == overWs.SEARCHING_STOP {
+		bytes, err := json.Marshal(pack.RawBody)
+		if err != nil {
+			return err
+		}
+
+		var reqDto overWsDto.CliSearchingStopBody
+		err = json.Unmarshal(bytes, &reqDto)
+		if err != nil {
+			return err
+		}
+
+		handler.SearchingStop(conn, reqDto)
+		return nil
 
 	} else if pack.Operation == overWs.CHATTING_NEW_MESSAGE {
 		bytes, err := json.Marshal(pack.RawBody)
