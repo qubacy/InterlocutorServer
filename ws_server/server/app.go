@@ -76,6 +76,7 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 	for {
 		messageType, messageContent, err := conn.ReadMessage()
 		log.Println(string(messageContent))
+		log.Println(messageType)
 
 		if messageType == websocket.CloseMessage {
 			return handler.RemoveConnAndClose(conn)
@@ -119,14 +120,17 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 }
 
 func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overWsDto.Pack) error {
+
+	// TODO: обработку перенести в handler, DTOs передавать сервисам
+
+	bytes, err := json.Marshal(pack.RawBody)
+	if err != nil {
+		return err
+	}
+
+	// ***
+
 	if pack.Operation == overWs.SEARCHING_START {
-		bytes, err := json.Marshal(pack.RawBody)
-		if err != nil {
-			return err
-		}
-
-		// TODO: обработку в header, roomServer.Do(DTO)
-
 		var reqDto overWsDto.CliSearchingStartBodyClient
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {
@@ -135,26 +139,14 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 
 		return handler.SearchingStart(conn, reqDto)
 	} else if pack.Operation == overWs.SEARCHING_STOP {
-		bytes, err := json.Marshal(pack.RawBody)
-		if err != nil {
-			return err
-		}
-
 		var reqDto overWsDto.CliSearchingStopBody
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {
 			return err
 		}
 
-		handler.SearchingStop(conn, reqDto)
-		return nil
-
+		return handler.SearchingStop(conn, reqDto)
 	} else if pack.Operation == overWs.CHATTING_NEW_MESSAGE {
-		bytes, err := json.Marshal(pack.RawBody)
-		if err != nil {
-			return err
-		}
-
 		var reqDto overWsDto.CliChattingNewMessageBody
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {
@@ -163,8 +155,15 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 
 		return handler.ChattingNewMessage(conn, reqDto)
 	} else if pack.Operation == overWs.CHOOSING_USERS_CHOSEN {
+		var reqDto overWsDto.CliChoosingUsersChosenBody
+		err = json.Unmarshal(bytes, &reqDto)
+		if err != nil {
+			return nil
+		}
 
+		return handler.ChoosingUsersChosen(conn, reqDto)
 	}
 
-	return handler.Err(conn, pack.Operation, "operation is unknown")
+	return handler.Err(conn, pack.Operation,
+		overWs.OperationIsUnknown)
 }

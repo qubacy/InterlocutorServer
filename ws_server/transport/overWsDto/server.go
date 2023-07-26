@@ -54,6 +54,7 @@ type SvrChoosingStageIsOverBody struct {
 
 // ***
 
+// TODO: переделать в код ошибки (?)
 type SvrErrBody struct {
 	Err Err `json:"error"`
 }

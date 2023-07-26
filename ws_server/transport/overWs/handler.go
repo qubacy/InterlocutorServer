@@ -1,11 +1,11 @@
 package overWs
 
 import (
-	"encoding/json"
 	"fmt"
 	"ilserver/domain"
 	"ilserver/service"
 	"ilserver/transport/overWsDto"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +14,7 @@ import (
 
 // TODO: должен отправлять пакеты сам?
 type CommonHandler struct {
+	Mx                     sync.RWMutex
 	RemoteAddrAndProfileId map[string]string
 	ProfileIdAndConn       map[string]*websocket.Conn
 
@@ -36,55 +37,68 @@ func (h *CommonHandler) AddConn(conn *websocket.Conn) {
 
 	// ***
 
-	// profile linked to conn pointer!
+	// profile linked to conn pointer
+	h.Mx.Lock()
 	h.RemoteAddrAndProfileId[remoteAddr] = profileId
 	h.ProfileIdAndConn[profileId] = conn
+	h.Mx.Unlock()
 }
 
-func (h *CommonHandler) RemoveConn(conn *websocket.Conn) {
+// private...
+func (h *CommonHandler) removeConn(conn *websocket.Conn) {
 	available, profileId := h.ProfileIdByConn(conn)
-	if !available {
-		return
-	}
+	if available {
+		h.Mx.Lock()
+		remoteAddr := conn.RemoteAddr().String()
+		delete(h.RemoteAddrAndProfileId, remoteAddr)
+		h.Mx.Unlock()
 
-	h.RoomService.RemoveProfileByIdBlocking(profileId)
+		h.RoomService.RemoveProfileByIdBlocking(profileId)
+	}
+	// may already be removed
 }
 
 func (h *CommonHandler) RemoveConnAndClose(conn *websocket.Conn) error {
-	h.RemoveConn(conn)
+	h.removeConn(conn)
 
-	conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(1000, "reason"))
+	// ***
+
+	closeBytes := websocket.FormatCloseMessage(1000, "reason")
+	conn.WriteMessage(websocket.CloseMessage, closeBytes)
 	return conn.Close()
 }
 
+// TODO: изменить порядок выходных параметров (?)
 func (h *CommonHandler) ProfileIdByConn(conn *websocket.Conn) (bool, string) {
+	h.Mx.RLock()
 	remoteAddr := conn.RemoteAddr().String()
-	id, ok := h.RemoteAddrAndProfileId[remoteAddr]
-	return ok, id
+	profileId, avb := h.RemoteAddrAndProfileId[remoteAddr]
+	h.Mx.RUnlock()
+
+	return avb, profileId
 }
 
 // -----------------------------------------------------------------------
 
+const (
+	OperationIsUnknown string = "operation is unknown"
+)
+
 func (h *CommonHandler) Err(conn *websocket.Conn, opCode int, errText string) error {
-	srvErr := overWsDto.SvrErrBody{}
-	srvErr.Err.Message = errText
-	srvErrBytes, _ := json.Marshal(srvErr)
+	srvErr := overWsDto.SvrErrBody{
+		Err: overWsDto.Err{
+			Message: errText,
+		},
+	}
 
 	// ***
 
-	rawBody := make(map[string]interface{})
-	json.Unmarshal(srvErrBytes, &rawBody)
-	errPack := overWsDto.Pack{
-		Operation: opCode,
-		RawBody:   rawBody,
-	}
-
-	errPackBytes, _ := json.Marshal(errPack)
+	errPackBytes := overWsDto.MakePackBytes(opCode, srvErr)
 	if err := conn.WriteMessage(websocket.TextMessage, errPackBytes); err != nil {
 		return err
 	}
 
-	return h.RemoveConnAndClose(conn)
+	return nil
 }
 
 // -----------------------------------------------------------------------
@@ -111,6 +125,7 @@ func (h *CommonHandler) SearchingStart(
 
 	available, profileId := h.ProfileIdByConn(conn)
 	if !available {
+		h.RoomService.Mx.Unlock()
 		return fmt.Errorf("Profile id is not available")
 	}
 
@@ -132,9 +147,11 @@ func (h *CommonHandler) SearchingStart(
 }
 
 func (h *CommonHandler) SearchingStop(
-	conn *websocket.Conn, reqDto overWsDto.CliSearchingStopBody) {
+	conn *websocket.Conn, reqDto overWsDto.CliSearchingStopBody) error {
 
-	//return h.RemoveConnAndClose(conn)
+	// TODO: будет тут реализация?
+
+	return nil
 }
 
 func (h *CommonHandler) ChattingNewMessage(
@@ -185,5 +202,11 @@ func (h *CommonHandler) ChattingNewMessage(
 	}
 
 	h.RoomService.Mx.Unlock()
+	return nil
+}
+
+func (h *CommonHandler) ChoosingUsersChosen(
+	conn *websocket.Conn, reqDto overWsDto.CliChoosingUsersChosenBody) error {
+
 	return nil
 }

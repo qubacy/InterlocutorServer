@@ -37,13 +37,19 @@ func NewRoomService() *RoomService {
 
 func (rs *RoomService) RemoveProfileByIdBlocking(profileId string) {
 	rs.Mx.Lock()
+	isRemoved := false
 	for i := range rs.Rooms {
+		if isRemoved {
+			break
+		}
+
 		for j := range rs.Rooms[i].Profiles {
 			if rs.Rooms[i].Profiles[j].Id == profileId {
 
 				rs.Rooms[i].Profiles =
 					append(rs.Rooms[i].Profiles[:j],
 						rs.Rooms[i].Profiles[j+1:]...)
+				break
 			}
 		}
 	}

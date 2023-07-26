@@ -14,10 +14,10 @@ func main() {
 	// ***
 
 	app := server.NewApp()
+
+	log.Println("Trying to run server...")
 	if err := app.Run(); err != nil {
 		log.Fatal("App startup failed with err:", err)
-	} else {
-		log.Println("App startup succeed...")
 	}
 
 	// ***

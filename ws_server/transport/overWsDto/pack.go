@@ -23,6 +23,8 @@ func MakePack(operation int, body interface{}) Pack {
 
 func MakePackBytes(operation int, body interface{}) []byte {
 	pack := MakePack(operation, body)
+
+	// TODO: так легко игнорировать ошибки (?)
 	packBytes, _ := json.Marshal(pack)
 	return packBytes
 }

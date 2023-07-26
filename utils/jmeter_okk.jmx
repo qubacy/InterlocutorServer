@@ -408,19 +408,6 @@
               <boolProp name="IfController.useExpression">true</boolProp>
             </IfController>
             <hashTree>
-              <eu.luminis.jmeter.wssampler.SingleWriteWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.SingleWriteWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.SingleWriteWebSocketSampler" testname="WebSocket Single Write Sampler" enabled="true">
-                <boolProp name="TLS">false</boolProp>
-                <stringProp name="server"></stringProp>
-                <stringProp name="port">80</stringProp>
-                <stringProp name="path"></stringProp>
-                <stringProp name="connectTimeout">20000</stringProp>
-                <boolProp name="binaryPayload">false</boolProp>
-                <stringProp name="requestData"></stringProp>
-                <boolProp name="createNewConnection">false</boolProp>
-                <boolProp name="loadDataFromFile">false</boolProp>
-                <stringProp name="dataFile"></stringProp>
-              </eu.luminis.jmeter.wssampler.SingleWriteWebSocketSampler>
-              <hashTree/>
               <eu.luminis.jmeter.wssampler.CloseWebSocketSampler guiclass="eu.luminis.jmeter.wssampler.CloseWebSocketSamplerGui" testclass="eu.luminis.jmeter.wssampler.CloseWebSocketSampler" testname="WebSocket Close" enabled="true">
                 <stringProp name="statusCode">1000</stringProp>
                 <stringProp name="readTimeout">6000</stringProp>
