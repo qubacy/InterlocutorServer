@@ -16,7 +16,7 @@
 }
 ```
 
-### **Sync** Response
+### *Sync* Response
 #### `Searching start`
 ```json
 {
@@ -25,7 +25,7 @@
 }
 ```
 
-### **Async** Responses
+### *Async* Responses
 #### `Searching game found`
 ```json
 {
@@ -86,6 +86,61 @@
             "text": "Hello!"
         }
     }
+}
+```
+
+### *Sync* Response
+#### `Searching start`
+```json
+{
+    "operation": 0,
+    "body": {}
+}
+```
+
+## OPS: `Chatting stage is over`
+
+### *Async* Response
+#### `Chatting stage is over`
+```json
+{
+    "operation": 4,
+    "body": {}
+}
+```
+
+## OPS: `Choosing users chosen`
+
+### Request
+#### `Choosing users chosen`
+```json
+{
+  "operation": 5,
+  "body":{
+    "userIdList": [
+        1,
+        2,
+        3
+    ]
+  }
+}
+```
+
+## OPS: `Choosing users chosen`
+
+### *Async* Response
+#### `Choosing users chosen`
+```json
+{
+  "operation": 6,
+  "body": {
+    "matchedUsers": [
+      {
+        "id": 1,
+        "contact": "@major"
+      }
+    ]
+  }
 }
 ```
 
