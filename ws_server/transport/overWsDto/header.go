@@ -1,4 +1,4 @@
-package overWs
+package overWsDto
 
 //TODO: нужны ли коды операций в ответе для клиента?
 

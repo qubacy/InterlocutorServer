@@ -26,6 +26,7 @@ type ChattingStateRoom struct {
 
 type ChoosingStateRoom struct {
 	RoomState
+	ProfileIdAndMatchedIds map[string][]string
 }
 
 // -----------------------------------------------------------------------
@@ -35,12 +36,4 @@ type Room struct {
 	State        interface{}
 	CreationTime time.Time
 	Profiles     []Profile // index is id
-}
-
-func MakeRoom() Room {
-	return Room{
-		State:        SearchingStateRoom{},
-		CreationTime: time.Now(),
-		Profiles:     []Profile{},
-	}
 }

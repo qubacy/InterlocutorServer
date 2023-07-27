@@ -64,8 +64,12 @@ func (h *CommonHandler) RemoveConnAndClose(conn *websocket.Conn) error {
 	// ***
 
 	closeBytes := websocket.FormatCloseMessage(1000, "reason")
-	conn.WriteMessage(websocket.CloseMessage, closeBytes)
-	return conn.Close()
+	err := conn.WriteMessage(websocket.CloseMessage, closeBytes)
+	if err == nil {
+		return conn.Close()
+	}
+
+	return err
 }
 
 // TODO: изменить порядок выходных параметров (?)
@@ -108,7 +112,7 @@ func (h *CommonHandler) SearchingStart(
 	conn *websocket.Conn, reqDto overWsDto.CliSearchingStartBodyClient) error {
 
 	if !reqDto.IsValid() {
-		h.Err(conn, SEARCHING_START, "body parameters are invalid")
+		h.Err(conn, overWsDto.SEARCHING_START, "body parameters are invalid")
 		return fmt.Errorf("CommonHandler, SearchingStart, req dto is invalid")
 	}
 
@@ -134,7 +138,7 @@ func (h *CommonHandler) SearchingStart(
 
 	// ***
 
-	var searchingState = room.State.(domain.SearchingStateRoom)
+	var searchingState = room.State.(*domain.SearchingStateRoom)
 	searchingState.LaunchTime = time.Now()
 	room.State = searchingState
 
@@ -142,7 +146,7 @@ func (h *CommonHandler) SearchingStart(
 
 	// ***
 
-	packBytes := overWsDto.MakePackBytes(SEARCHING_START, overWsDto.SvrSearchingStartBody{})
+	packBytes := overWsDto.MakePackBytes(overWsDto.SEARCHING_START, overWsDto.SvrSearchingStartBody{})
 	return conn.WriteMessage(websocket.TextMessage, packBytes)
 }
 
@@ -158,7 +162,7 @@ func (h *CommonHandler) ChattingNewMessage(
 	conn *websocket.Conn, reqDto overWsDto.CliChattingNewMessageBody) error {
 
 	if !reqDto.IsValid() {
-		h.Err(conn, CHATTING_NEW_MESSAGE, "body parameters are invalid")
+		h.Err(conn, overWsDto.CHATTING_NEW_MESSAGE, "body parameters are invalid")
 		return fmt.Errorf("CommonHandler, ChattingNewMessage, req dto is invalid")
 	}
 
@@ -193,7 +197,7 @@ func (h *CommonHandler) ChattingNewMessage(
 		},
 	}
 
-	packBytes := overWsDto.MakePackBytes(CHATTING_NEW_MESSAGE, resDto)
+	packBytes := overWsDto.MakePackBytes(overWsDto.CHATTING_NEW_MESSAGE, resDto)
 	for i := range room.Profiles {
 		c := h.ProfileIdAndConn[room.Profiles[i].Id]
 		if err := c.WriteMessage(websocket.TextMessage, packBytes); err != nil {
@@ -208,5 +212,61 @@ func (h *CommonHandler) ChattingNewMessage(
 func (h *CommonHandler) ChoosingUsersChosen(
 	conn *websocket.Conn, reqDto overWsDto.CliChoosingUsersChosenBody) error {
 
+	if !reqDto.IsValid() {
+		h.Err(conn, overWsDto.CHOOSING_USERS_CHOSEN, "body parameters are invalid")
+		return fmt.Errorf("CommonHandler, ChoosingUsersChosen, req dto is invalid")
+	}
+
+	// ***
+
+	available, profileId := h.ProfileIdByConn(conn)
+	if !available {
+		return fmt.Errorf("Profile id is not available")
+	}
+
+	h.RoomService.Mx.Lock()
+
+	available, room := h.RoomService.RoomWithProfileById(profileId)
+	if !available {
+		h.RoomService.Mx.Unlock()
+		return fmt.Errorf("Profile does not belong to the room")
+	}
+
+	localProfileId := findLocalIdByProfileId(&room.Profiles, profileId)
+	if localProfileId == -1 {
+		h.RoomService.Mx.Unlock()
+		return fmt.Errorf("Profile was not found")
+	}
+
+	// ***
+
+	switch room.State.(type) {
+	case *domain.ChoosingStateRoom:
+		choosingState := room.State.(*domain.ChoosingStateRoom)
+		matchedIds := []string{}
+		for _, userId := range reqDto.UserIdList {
+			matchedIds = append(matchedIds, room.Profiles[userId].Id)
+		}
+
+		choosingState.ProfileIdAndMatchedIds[profileId] = matchedIds
+	default:
+		h.RoomService.Mx.Unlock()
+		return fmt.Errorf("Room state is not choosing")
+	}
+
+	h.RoomService.Mx.Unlock()
 	return nil
+}
+
+// utils
+// -----------------------------------------------------------------------
+
+func findLocalIdByProfileId(profiles *[]domain.Profile, profileId string) int {
+	for i := range *profiles {
+		if (*profiles)[i].Id == profileId {
+			return i
+		}
+	}
+
+	return -1 // err
 }

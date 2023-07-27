@@ -8,7 +8,7 @@ type SvrMessage struct {
 	Text     string `json:"text"`
 }
 
-type MatchedUsers struct {
+type MatchedUser struct {
 	Id      int    `json:"id"`
 	Contact string `json:"contact"`
 }
@@ -17,7 +17,7 @@ type Err struct {
 	Message string `json:"message"`
 }
 
-type ProfilePublicList struct {
+type ProfilePublic struct {
 	Id       int    `json:"id"`
 	Username string `json:"username"`
 }
@@ -29,7 +29,7 @@ type FoundGameData struct {
 	ChoosingStageDuration int64  `json:"choosingStageDuration"`
 	ChattingTopic         string `json:"chattingTopic"`
 
-	ProfilePublicList []ProfilePublicList `json:"profilePublicList"`
+	ProfilePublicList []ProfilePublic `json:"profilePublicList"`
 }
 
 // svr - server
@@ -49,7 +49,7 @@ type SvrChattingStageIsOverBody struct{}
 type SvrChoosingUsersChosenBody struct{}
 
 type SvrChoosingStageIsOverBody struct {
-	MatchedUsers []MatchedUsers `json:"matchedUsers"`
+	MatchedUsers []MatchedUser `json:"matchedUsers"`
 }
 
 // ***

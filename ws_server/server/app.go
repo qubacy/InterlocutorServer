@@ -76,13 +76,20 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 	for {
 		messageType, messageContent, err := conn.ReadMessage()
 
+		// TODO: изучить закрытие веб-сокета
 		if err != nil {
-			if err.(*websocket.CloseError) == nil {
-				return handler.RemoveConnAndClose(conn)
+			switch err.(type) {
+			case *websocket.CloseError:
+				concreteErr := err.(*websocket.CloseError)
+				log.Printf("Unexpected read message, close err %v", concreteErr)
+			case *websocket.HandshakeError:
+				concreteErr := err.(*websocket.HandshakeError)
+				log.Printf("Unexpected read message, handshake err %v", concreteErr)
 			}
-
-			return err
+			return handler.RemoveConnAndClose(conn)
 		}
+
+		// ***
 
 		log.Println(string(messageContent))
 		log.Println(messageType)
@@ -135,7 +142,7 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 
 	// ***
 
-	if pack.Operation == overWs.SEARCHING_START {
+	if pack.Operation == overWsDto.SEARCHING_START {
 		var reqDto overWsDto.CliSearchingStartBodyClient
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {
@@ -143,7 +150,7 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 		}
 
 		return handler.SearchingStart(conn, reqDto)
-	} else if pack.Operation == overWs.SEARCHING_STOP {
+	} else if pack.Operation == overWsDto.SEARCHING_STOP {
 		var reqDto overWsDto.CliSearchingStopBody
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {
@@ -151,7 +158,7 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 		}
 
 		return handler.SearchingStop(conn, reqDto)
-	} else if pack.Operation == overWs.CHATTING_NEW_MESSAGE {
+	} else if pack.Operation == overWsDto.CHATTING_NEW_MESSAGE {
 		var reqDto overWsDto.CliChattingNewMessageBody
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {
@@ -159,7 +166,7 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 		}
 
 		return handler.ChattingNewMessage(conn, reqDto)
-	} else if pack.Operation == overWs.CHOOSING_USERS_CHOSEN {
+	} else if pack.Operation == overWsDto.CHOOSING_USERS_CHOSEN {
 		var reqDto overWsDto.CliChoosingUsersChosenBody
 		err = json.Unmarshal(bytes, &reqDto)
 		if err != nil {

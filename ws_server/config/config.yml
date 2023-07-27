@@ -2,3 +2,12 @@ port: "47777"
 
 update_rooms:
   timeout: 16ms
+
+found_game:
+  chatting_stage_duration: 30m
+  choosing_stage_duration: 15s
+
+background:
+  update_rooms:
+    with_searching_state:
+      interval_from_last_update_to_next_state: 10s
