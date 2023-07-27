@@ -6,7 +6,6 @@ import (
 	"ilserver/transport/overWsDto"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -72,7 +71,8 @@ func (s *App) Run() error {
 }
 
 func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
-	var once sync.Once
+	handler.AddConn(conn)
+
 	for {
 		messageType, messageContent, err := conn.ReadMessage()
 
@@ -115,10 +115,6 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 		log.Println(conn.RemoteAddr(), pack)
 
 		// ***
-
-		once.Do(func() {
-			handler.AddConn(conn)
-		})
 
 		err = routeWsPack(handler, conn, pack)
 		if err != nil {
