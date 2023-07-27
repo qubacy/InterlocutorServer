@@ -209,6 +209,7 @@ func (rs *RoomService) updateRoomWithChattingState(roomInx int) {
 			Name:       domain.CHOOSING,
 			LaunchTime: time.Now(),
 		},
+		ProfileIdAndMatchedIds: make(map[string][]string),
 	}
 
 	// ***
