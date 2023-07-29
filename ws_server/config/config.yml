@@ -3,6 +3,9 @@ port: "47777"
 update_rooms:
   timeout: 16ms
 
+room:
+  max_profile_count: 6
+
 found_game:
   chatting_stage_duration: 30m
   choosing_stage_duration: 15s

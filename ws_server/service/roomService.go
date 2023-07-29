@@ -68,11 +68,18 @@ func (rs *RoomService) RoomWithProfileById(profileId string) (bool, *domain.Room
 	return false, nil
 }
 
-func (rs *RoomService) RoomWithSearchingState() (bool, *domain.Room) {
+func (rs *RoomService) AvailableRoomWithSearchingState() (bool, *domain.Room) {
+	maxProfileCount :=
+		viper.GetInt("room.max_profile_count")
+
 	for i := range rs.Rooms {
-		switch rs.Rooms[i].State.(type) {
+		current := &rs.Rooms[i]
+		switch current.State.(type) {
 		case *domain.SearchingStateRoom:
-			return true, &rs.Rooms[i]
+
+			if len(current.Profiles) < maxProfileCount {
+				return true, current
+			}
 		}
 	}
 	return false, nil
@@ -117,7 +124,8 @@ func (rs *RoomService) BackgroundUpdateRoomsTick() {
 
 func randChattingTopic() string {
 	topics := []string{
-		"кино", "музыка",
+		"кино",
+		"музыка",
 		"настольные игры",
 		//...
 	}

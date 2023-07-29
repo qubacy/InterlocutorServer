@@ -121,7 +121,7 @@ func (h *CommonHandler) SearchingStart(
 	// TODO: создать метод в сервисе
 	h.RoomService.Mx.Lock()
 
-	available, room := h.RoomService.RoomWithSearchingState()
+	available, room := h.RoomService.AvailableRoomWithSearchingState()
 	if !available {
 		h.RoomService.AddRoomWithSearchingState()
 		room = &h.RoomService.Rooms[len(h.RoomService.Rooms)-1]
