@@ -68,7 +68,7 @@ func (rs *RoomService) RoomWithProfileById(profileId string) (bool, *domain.Room
 	return false, nil
 }
 
-func (rs *RoomService) AvailableRoomWithSearchingState() (bool, *domain.Room) {
+func (rs *RoomService) AvailableRoomWithSearchingState(lang int) (bool, *domain.Room) {
 	maxProfileCount :=
 		viper.GetInt("room.max_profile_count")
 
@@ -77,7 +77,9 @@ func (rs *RoomService) AvailableRoomWithSearchingState() (bool, *domain.Room) {
 		switch current.State.(type) {
 		case *domain.SearchingStateRoom:
 
-			if len(current.Profiles) < maxProfileCount {
+			if len(current.Profiles) < maxProfileCount &&
+				current.Language == lang {
+
 				return true, current
 			}
 		}
@@ -85,9 +87,10 @@ func (rs *RoomService) AvailableRoomWithSearchingState() (bool, *domain.Room) {
 	return false, nil
 }
 
-func (rs *RoomService) AddRoomWithSearchingState() {
+func (rs *RoomService) AddRoomWithSearchingState(lang int) {
 	currentTime := time.Now()
 	one := domain.Room{
+		Language: lang,
 		State: &domain.SearchingStateRoom{
 			RoomState: domain.RoomState{
 				Name:       domain.SEARCHING,

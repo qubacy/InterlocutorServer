@@ -2,6 +2,7 @@ package main
 
 import (
 	"ilserver/config"
+	"ilserver/repository"
 	"ilserver/server"
 	"log"
 )
@@ -9,6 +10,10 @@ import (
 func main() {
 	if err := config.Init(); err != nil {
 		log.Fatal("Config initialization has been failed with err:", err)
+	}
+
+	if err := repository.Init(); err != nil {
+		log.Fatal("Repository initialization has been failed with err:", err)
 	}
 
 	// ***

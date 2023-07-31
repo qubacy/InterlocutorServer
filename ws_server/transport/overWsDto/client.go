@@ -8,9 +8,11 @@ import (
 
 // parts
 // -----------------------------------------------------------------------
+
 type Profile struct {
 	Username string `json:"username"`
 	Contact  string `json:"contact"`
+	Language int    `json:"lang"`
 }
 
 type CliMessage struct {
@@ -44,10 +46,6 @@ func (dto *CliSearchingStartBodyClient) IsValid() bool {
 
 func (dto *CliChattingNewMessageBody) IsValid() bool {
 	return dto.Message.Text != ""
-}
-
-func (dto *CliChoosingUsersChosenBody) IsValid() bool {
-	return len(dto.UserIdList) > 0
 }
 
 // adapter

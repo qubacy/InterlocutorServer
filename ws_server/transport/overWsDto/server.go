@@ -14,7 +14,7 @@ type MatchedUser struct {
 }
 
 type Err struct {
-	Message string `json:"message"`
+	Id int `json:"id"`
 }
 
 type ProfilePublic struct {

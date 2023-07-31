@@ -7,6 +7,8 @@ require (
 	golang.org/x/net v0.12.0
 )
 
+require github.com/mattn/go-sqlite3 v1.14.17 // indirect
+
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/google/uuid v1.3.0

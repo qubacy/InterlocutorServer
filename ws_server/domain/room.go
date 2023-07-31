@@ -36,4 +36,5 @@ type Room struct {
 	State        interface{}
 	CreationTime time.Time
 	Profiles     []Profile // index is id
+	Language     int
 }

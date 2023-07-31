@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"ilserver/transport/overWs"
 	"ilserver/transport/overWsDto"
 	"log"
@@ -132,9 +133,6 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 }
 
 func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overWsDto.Pack) error {
-
-	// TODO: обработку перенести в handler, DTOs передавать сервисам
-
 	bytes, err := json.Marshal(pack.RawBody)
 	if err != nil {
 		return err
@@ -176,6 +174,7 @@ func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overW
 		return handler.ChoosingUsersChosen(conn, reqDto)
 	}
 
-	return handler.Err(conn, pack.Operation,
-		overWs.OperationIsUnknown)
+	// ***
+
+	return fmt.Errorf("routeWsPack, operation is unknown")
 }

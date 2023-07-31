@@ -5,12 +5,29 @@ import (
 	"ilserver/domain"
 	"ilserver/service"
 	"ilserver/transport/overWsDto"
+	"log"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+const (
+	INVALID_PROFILE = 0
+	INVALID_MESSAGE
+)
+
+type HandlerError struct {
+	Code int
+}
+
+func (he HandlerError) Error() string {
+	return strconv.Itoa(he.Code)
+}
+
+// -----------------------------------------------------------------------
 
 // TODO: должен отправлять пакеты сам?
 type CommonHandler struct {
@@ -84,14 +101,10 @@ func (h *CommonHandler) ProfileIdByConn(conn *websocket.Conn) (bool, string) {
 
 // -----------------------------------------------------------------------
 
-const (
-	OperationIsUnknown string = "operation is unknown"
-)
-
-func (h *CommonHandler) Err(conn *websocket.Conn, opCode int, errText string) error {
+func (h *CommonHandler) Err(conn *websocket.Conn, opCode int, code int) error {
 	srvErr := overWsDto.SvrErrBody{
 		Err: overWsDto.Err{
-			Message: errText,
+			Id: code,
 		},
 	}
 
@@ -112,7 +125,9 @@ func (h *CommonHandler) SearchingStart(
 	conn *websocket.Conn, reqDto overWsDto.CliSearchingStartBodyClient) error {
 
 	if !reqDto.IsValid() {
-		h.Err(conn, overWsDto.SEARCHING_START, "body parameters are invalid")
+		if err := h.Err(conn, overWsDto.SEARCHING_START, INVALID_PROFILE); err != nil {
+			log.Println("CommonHandler, SearchingStart, Err, err:", err)
+		}
 		return fmt.Errorf("CommonHandler, SearchingStart, req dto is invalid")
 	}
 
@@ -121,9 +136,10 @@ func (h *CommonHandler) SearchingStart(
 	// TODO: создать метод в сервисе
 	h.RoomService.Mx.Lock()
 
-	available, room := h.RoomService.AvailableRoomWithSearchingState()
+	roomLang := reqDto.Profile.Language
+	available, room := h.RoomService.AvailableRoomWithSearchingState(roomLang)
 	if !available {
-		h.RoomService.AddRoomWithSearchingState()
+		h.RoomService.AddRoomWithSearchingState(roomLang)
 		room = &h.RoomService.Rooms[len(h.RoomService.Rooms)-1]
 	}
 
@@ -162,7 +178,9 @@ func (h *CommonHandler) ChattingNewMessage(
 	conn *websocket.Conn, reqDto overWsDto.CliChattingNewMessageBody) error {
 
 	if !reqDto.IsValid() {
-		h.Err(conn, overWsDto.CHATTING_NEW_MESSAGE, "body parameters are invalid")
+		if err := h.Err(conn, overWsDto.CHATTING_NEW_MESSAGE, INVALID_MESSAGE); err != nil {
+			log.Println("CommonHandler, ChattingNewMessage, Err, err:", err)
+		}
 		return fmt.Errorf("CommonHandler, ChattingNewMessage, req dto is invalid")
 	}
 
@@ -211,13 +229,6 @@ func (h *CommonHandler) ChattingNewMessage(
 
 func (h *CommonHandler) ChoosingUsersChosen(
 	conn *websocket.Conn, reqDto overWsDto.CliChoosingUsersChosenBody) error {
-
-	if !reqDto.IsValid() {
-		h.Err(conn, overWsDto.CHOOSING_USERS_CHOSEN, "body parameters are invalid")
-		return fmt.Errorf("CommonHandler, ChoosingUsersChosen, req dto is invalid")
-	}
-
-	// ***
 
 	available, profileId := h.ProfileIdByConn(conn)
 	if !available {
