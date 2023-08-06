@@ -85,15 +85,6 @@
 }
 ```
 
-### Response
-#### `Searching start`
-```json
-{
-  "operation": 0,
-  "body": {}
-}
-```
-
 ### *Async* Response
 #### `Chatting stage is over`
 ```json
