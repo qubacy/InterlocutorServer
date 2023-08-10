@@ -9,6 +9,8 @@ import (
 
 type Repo struct {
 	db *sql.DB
+
+	
 }
 
 var once sync.Once
