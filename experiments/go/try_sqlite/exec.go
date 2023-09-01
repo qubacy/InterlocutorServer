@@ -3,18 +3,20 @@ package try_sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// raw query
+// to err: database is locked
 func insertMultipleEntries(db *sql.DB) {
-	const grCount = 2
+	const grCount = 100
 	var wg sync.WaitGroup = sync.WaitGroup{}
 	wg.Add(grCount)
 
@@ -44,7 +46,7 @@ func insertMultipleEntries(db *sql.DB) {
 	wg.Wait()
 }
 
-// transaction
+// to err: database is locked
 func insertMultipleEntries1(db *sql.DB) {
 	const grCount = 1000
 	var wg sync.WaitGroup = sync.WaitGroup{}
@@ -95,23 +97,80 @@ func insertMultipleEntries1(db *sql.DB) {
 	wg.Wait()
 }
 
+// ok!
+func insertMultipleEntries3(db *sql.DB) {
+	var wg sync.WaitGroup = sync.WaitGroup{}
+	const grCount = 100
+	wg.Add(grCount)
+
+	var mx = sync.Mutex{}
+	routine := func(tq string) {
+		defer wg.Done()
+
+		time.Sleep(time.Millisecond *
+			time.Duration(rand.Intn(1000)))
+
+		mx.Lock()
+		_, err := db.Exec(tq)
+		mx.Unlock()
+
+		if err != nil {
+			log.Fatalf("insertMultipleEntries, sql.Open, err: %v", err)
+			return
+		}
+	}
+
+	// ***
+
+	for i := 0; i < grCount; i++ {
+		tq := fmt.Sprintf(
+			"INSERT INTO Topics (Lang, Name) "+
+				"VALUES (0, 'Topic%d');", i)
+
+		go routine(tq)
+	}
+
+	wg.Wait()
+}
+
 func Exec() {
-	tq :=
+	pathToDb := "./try_sqlite/storage"
+
+	// ***
+
+	if _, err := os.Stat(pathToDb); !errors.Is(err, os.ErrNotExist) {
+		err = os.RemoveAll(pathToDb)
+		if err != nil {
+			log.Fatalf("Exec, os.RemoveAll, err %v:", err)
+			return
+		}
+		fmt.Println("rm ok")
+	}
+	err := os.Mkdir(pathToDb, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Exec, os.Mkdir, err %v:", err)
+		return
+	}
+
+	// ***
+
+	queryText :=
 		"CREATE TABLE IF NOT EXISTS Topics( " +
 			"    Idr INTEGER PRIMARY KEY AUTOINCREMENT, " +
 			"    Lang INTEGER, " +
 			"    Name TEXT " +
 			"); "
 
-	db, err := sql.Open("sqlite3", "store.db")
+	db, err := sql.Open("sqlite3", pathToDb+"/topics.db")
 	if err != nil {
 		log.Fatalf("Exec, sql.Open, err %v:", err)
 		return
 	}
+	defer db.Close()
 
 	// ***
 
-	_, err = db.Exec(tq)
+	_, err = db.Exec(queryText)
 	if err != nil {
 		log.Fatal("Exec, sql.Open, err:", err)
 		return
@@ -119,6 +178,5 @@ func Exec() {
 
 	// ***
 
-	insertMultipleEntries1(db)
-	db.Close()
+	insertMultipleEntries3(db)
 }
