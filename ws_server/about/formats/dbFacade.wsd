@@ -1,0 +1,31 @@
+@startuml dbFacade
+
+skinparam ArrowThickness 1.25
+skinparam ClassBorderThickness 1.5
+skinparam ClassBackgroundColor #FEFECE
+skinparam ClassBorderColor #B20842
+
+skinparam dpi 200
+skinparam Shadowing true
+
+' -----------------------------------------------
+
+hide empty members
+hide empty methods
+
+' -----------------------------------------------
+
+class Topics {
+    Idr: Integer
+    Lang: Integer
+    Name: Text
+}
+
+class Admins {
+    Idr: Integer
+    Login: Text
+    Pass: Text
+    RefreshTokenHash: Text
+}
+
+@enduml
