@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"ilserver/domain"
 	"ilserver/repository"
 	"ilserver/transport/overWs"
 	"ilserver/transport/overWsDto"
@@ -106,6 +107,28 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 		}
 		w.Write([]byte(
 			strconv.FormatBool(has)))
+	})
+	mux.HandleFunc("/debug/database/insert-topic", func(w http.ResponseWriter, r *http.Request) {
+		langAsStr := r.PostForm.Get("lang")
+		name := r.PostForm.Get("name")
+
+		lang, err := strconv.Atoi(langAsStr)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
+
+		err, idr := repository.Instance().InsertTopic(
+			domain.Topic{
+				Lang: lang,
+				Name: name,
+			},
+		)
+
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
+		w.Write([]byte(
+			strconv.FormatInt(idr, 10)))
 	})
 }
 

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"ilserver/domain"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -215,4 +216,35 @@ func (r *DbFacade) HasAdminByLogin(login string) (error, bool) {
 	}
 
 	return nil, recordCount > 0
+}
+
+func (r *DbFacade) InsertTopic(topic domain.Topic) (error, int64) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"INSERT INTO [Topics] (Lang, Name) " +
+			"VALUES (?, ?);")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err), 0
+	}
+	defer stmt.Close() // ignore err!
+
+	// ***
+
+	res, err := stmt.Exec(topic.Lang, topic.Name)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err), 0
+	}
+
+	// ***
+
+	lastInsertId, err := res.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("get last insert id failed %v", err), 0
+	}
+
+	return nil, lastInsertId
 }
