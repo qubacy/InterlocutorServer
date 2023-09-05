@@ -21,3 +21,6 @@ database:
     login: "admin"
     pass: "admin"
 
+debug_server:
+  use: true
+

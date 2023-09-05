@@ -22,6 +22,8 @@ func main() {
 	// ***
 
 	log.Println("Trying to run server...")
+
+	// run only once!
 	if err := app.Run(); err != nil {
 		log.Fatal("App startup failed with err:", err)
 	}

@@ -3,10 +3,12 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"ilserver/repository"
 	"ilserver/transport/overWs"
 	"ilserver/transport/overWsDto"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -27,14 +29,44 @@ func (s *App) Run() error {
 	handler := overWs.NewCommonHandler()
 	overWs.BackgroundUpdateRooms(handler)
 
-	// *** ws
+	// ***
 
+	var mux = http.NewServeMux()
+
+	// *** websocket ***
+
+	prepareWsServer(mux, handler)
+
+	// *** simple debug http ***
+
+	var useDebugSvr bool = viper.GetBool(
+		"debug_server.use")
+	if useDebugSvr {
+		prepareDebugServer(mux, handler)
+	}
+
+	// ***
+
+	s.httpServer = &http.Server{
+		Addr:           ":" + viper.GetString("port"),
+		MaxHeaderBytes: 1 << 20, // 1 MB
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		Handler:        mux,
+	}
+
+	return s.httpServer.ListenAndServe()
+}
+
+// route preparation
+// -----------------------------------------------------------------------
+
+func prepareWsServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
 
-	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		websocket, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -49,27 +81,35 @@ func (s *App) Run() error {
 			return
 		}
 	})
+}
 
-	// *** simple debug http
-
-	mux.HandleFunc("/debug/rooms", func(w http.ResponseWriter, r *http.Request) {
+func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
+	mux.HandleFunc("/debug/runtime/rooms", func(w http.ResponseWriter, r *http.Request) {
 		bytes, _ := json.Marshal(handler.RoomService.Rooms)
 		w.Header().Add("Content-Type", "application/json")
 		w.Write(bytes)
 	})
+	mux.HandleFunc("/debug/database/admin-count", func(w http.ResponseWriter, r *http.Request) {
+		err, count := repository.Instance().RecordCountInTable("Admins")
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
+		w.Write([]byte(
+			strconv.Itoa(count)))
+	})
+	mux.HandleFunc("/debug/database/has-admin", func(w http.ResponseWriter, r *http.Request) {
+		login := r.URL.Query().Get("login")
+		err, has := repository.Instance().HasAdminByLogin(login)
 
-	// ***
-
-	s.httpServer = &http.Server{
-		Addr:           ":" + viper.GetString("port"),
-		MaxHeaderBytes: 1 << 20, // 1 MB
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		Handler:        mux,
-	}
-
-	return s.httpServer.ListenAndServe()
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
+		w.Write([]byte(
+			strconv.FormatBool(has)))
+	})
 }
+
+// -----------------------------------------------------------------------
 
 func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 	handler.AddConn(conn)

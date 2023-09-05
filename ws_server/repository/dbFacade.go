@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// -----------------------------------------------------------------------
+
 type DbFacade struct {
 	mx sync.Mutex
 	db *sql.DB
@@ -29,8 +31,11 @@ func Init() error {
 	once.Do(func() {
 		db, err := sql.Open("sqlite3", "../repository/"+
 			viper.GetString("database.file"))
+
 		if err != nil {
-			returnError = fmt.Errorf("Init, sql.Open err: %v", err)
+			returnError =
+				fmt.Errorf("Init, sql.Open err: %v", err)
+			return
 		}
 
 		// ***
@@ -42,17 +47,24 @@ func Init() error {
 
 		err = inst.createTopics()
 		if err != nil {
-			returnError = fmt.Errorf("Init, inst.createTopics err: %v", err)
+			returnError =
+				fmt.Errorf("Init, inst.createTopics err: %v", err)
+			return
 		}
+
+		// ***
 
 		err = inst.createAdmins()
 		if err != nil {
-			returnError = fmt.Errorf("Init, inst.createAdmins err: %v", err)
+			returnError =
+				fmt.Errorf("Init, inst.createAdmins err: %v", err)
+			return
 		}
-
-		err = inst.inflateAdmins()
+		err = inst.inflateAdminsIfNeed()
 		if err != nil {
-			returnError = fmt.Errorf("Init, inst.inflateAdmins err: %v", err)
+			returnError =
+				fmt.Errorf("Init, inst.inflateAdminsIfNeed err: %v", err)
+			return
 		}
 	})
 
@@ -66,6 +78,7 @@ func newDbFacade(db *sql.DB) *DbFacade {
 	}
 }
 
+// private
 // -----------------------------------------------------------------------
 
 func (r *DbFacade) createTopics() error {
@@ -93,6 +106,27 @@ func (r *DbFacade) createAdmins() error {
 	return err
 }
 
+func (r *DbFacade) inflateAdminsIfNeed() error {
+	err, num :=
+		inst.RecordCountInTable("Admins")
+	if err != nil {
+		return fmt.Errorf("inflateAdminsIfNeed, inst.RecordCountInTable"+
+			"err: %v", err)
+	}
+
+	// ***
+
+	if num == 0 {
+		err = inst.inflateAdmins()
+		if err != nil {
+			return fmt.Errorf("inflateAdminsIfNeed, inst.inflateAdmins "+
+				"err: %v", err)
+		}
+	}
+
+	return nil
+}
+
 func (r *DbFacade) inflateAdmins() error {
 	stmt, err := r.db.Prepare(
 		"INSERT INTO [Admins] (Login, Pass) " +
@@ -109,13 +143,76 @@ func (r *DbFacade) inflateAdmins() error {
 	return err
 }
 
+// public
 // -----------------------------------------------------------------------
 
-func (r *DbFacade) hasAdminByLogin(login string) (error, bool) {
+func (r *DbFacade) RecordCountInTable(name string) (error, int) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
 	// ***
 
-	return nil, true
+	stmt, err := r.db.Prepare("SELECT count(*) AS RecordCount " +
+		"FROM " + name + ";")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err), 0
+	}
+	defer stmt.Close() // ignore err!
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err), 0
+	}
+	defer rows.Close()
+
+	// ***
+
+	var recordCount int
+	if rows.Next() {
+		err = rows.Scan(&recordCount)
+		if err != nil {
+			return fmt.Errorf("scan next row with err %v", err), 0
+		}
+	} else {
+		return fmt.Errorf("rows count is zero"), 0
+	}
+
+	return nil, recordCount
+}
+
+func (r *DbFacade) HasAdminByLogin(login string) (error, bool) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"SELECT count(*) AS RecordCount " +
+			"FROM [Admins] WHERE [Admins].[Login] = ?;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err), false
+	}
+	defer stmt.Close() // ignore err!
+
+	// ***
+
+	rows, err := stmt.Query(login)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err), false
+	}
+	defer rows.Close()
+
+	// ***
+
+	var recordCount int
+	if rows.Next() {
+		err = rows.Scan(&recordCount)
+		if err != nil {
+			return fmt.Errorf("scan next row with err %v", err), false
+		}
+	} else {
+		return fmt.Errorf("rows count is zero"), false
+	}
+
+	return nil, recordCount > 0
 }
