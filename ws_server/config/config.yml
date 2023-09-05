@@ -14,3 +14,10 @@ background:
   update_rooms:
     with_searching_state:
       interval_from_last_update_to_next_state: 10s
+
+database:
+  file: "storage.db"
+  default_admin_entry:
+    login: "admin"
+    pass: "admin"
+
