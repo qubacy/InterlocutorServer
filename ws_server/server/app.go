@@ -85,51 +85,85 @@ func prepareWsServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 }
 
 func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
-	mux.HandleFunc("/debug/runtime/rooms", func(w http.ResponseWriter, r *http.Request) {
-		bytes, _ := json.Marshal(handler.RoomService.Rooms)
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(bytes)
-	})
-	mux.HandleFunc("/debug/database/admin-count", func(w http.ResponseWriter, r *http.Request) {
-		err, count := repository.Instance().RecordCountInTable("Admins")
-		if err != nil {
-			w.Write([]byte(err.Error()))
-		}
-		w.Write([]byte(
-			strconv.Itoa(count)))
-	})
-	mux.HandleFunc("/debug/database/has-admin", func(w http.ResponseWriter, r *http.Request) {
-		login := r.URL.Query().Get("login")
-		err, has := repository.Instance().HasAdminByLogin(login)
+	mux.HandleFunc("/debug/runtime/rooms",
+		func(w http.ResponseWriter, r *http.Request) {
+			bytes, _ := json.Marshal(handler.RoomService.Rooms)
+			w.Header().Add("Content-Type", "application/json")
+			w.Write(bytes)
+		})
+	mux.HandleFunc("/debug/database/admin-count",
+		func(w http.ResponseWriter, r *http.Request) {
+			err, count := repository.Instance().RecordCountInTable("Admins")
+			if err != nil {
+				w.Write([]byte(err.Error()))
+			}
+			w.Write([]byte(
+				strconv.Itoa(count)))
+		})
+	mux.HandleFunc("/debug/database/has-admin",
+		func(w http.ResponseWriter, r *http.Request) {
+			login := r.URL.Query().Get("login")
+			err, has := repository.Instance().HasAdminByLogin(login)
 
-		if err != nil {
-			w.Write([]byte(err.Error()))
-		}
-		w.Write([]byte(
-			strconv.FormatBool(has)))
-	})
-	mux.HandleFunc("/debug/database/insert-topic", func(w http.ResponseWriter, r *http.Request) {
-		langAsStr := r.PostForm.Get("lang")
-		name := r.PostForm.Get("name")
+			if err != nil {
+				w.Write([]byte(err.Error()))
+			}
+			w.Write([]byte(
+				strconv.FormatBool(has)))
+		})
+	mux.HandleFunc("/debug/database/insert-topic",
+		func(w http.ResponseWriter, r *http.Request) {
+			err := r.ParseForm()
+			if err != nil {
+				w.Write([]byte(err.Error()))
+			}
 
-		lang, err := strconv.Atoi(langAsStr)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-		}
+			// ***
 
-		err, idr := repository.Instance().InsertTopic(
-			domain.Topic{
-				Lang: lang,
-				Name: name,
-			},
-		)
+			name := r.Form.Get("name")
+			langAsStr := r.Form.Get("lang")
 
-		if err != nil {
-			w.Write([]byte(err.Error()))
-		}
-		w.Write([]byte(
-			strconv.FormatInt(idr, 10)))
-	})
+			lang, err := strconv.Atoi(langAsStr)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+			}
+
+			// ***
+
+			err, idr := repository.Instance().InsertTopic(
+				domain.Topic{
+					Lang: lang,
+					Name: name,
+				},
+			)
+
+			if err != nil {
+				w.Write([]byte(err.Error()))
+			}
+			w.Write([]byte(
+				strconv.FormatInt(idr, 10)))
+		})
+	mux.HandleFunc("/debug/database/update-admin-pass",
+		func(w http.ResponseWriter, r *http.Request) {
+			err := r.ParseForm()
+			if err != nil {
+				w.Write([]byte(err.Error()))
+			}
+
+			// ***
+
+			login := r.Form.Get("login")
+			newPass := r.Form.Get("newPass")
+
+			err = repository.Instance().UpdateAdminPass(
+				login, newPass)
+
+			if err != nil {
+				w.Write([]byte(err.Error()))
+			}
+			w.Write([]byte(
+				strconv.FormatBool(true)))
+		})
 }
 
 // -----------------------------------------------------------------------

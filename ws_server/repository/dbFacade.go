@@ -248,3 +248,29 @@ func (r *DbFacade) InsertTopic(topic domain.Topic) (error, int64) {
 
 	return nil, lastInsertId
 }
+
+func (r *DbFacade) UpdateAdminPass(login, newPass string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"UPDATE [Admins] SET [Pass] = ? " +
+			"WHERE [Login] == ?;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err)
+	}
+	defer stmt.Close()
+
+	// ***
+
+	_, err = stmt.Exec(newPass, login)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err)
+	}
+
+	// ***
+
+	return nil
+}
