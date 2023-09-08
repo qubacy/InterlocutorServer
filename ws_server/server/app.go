@@ -34,9 +34,10 @@ func (s *App) Run() error {
 
 	var mux = http.NewServeMux()
 
-	// *** websocket ***
+	// *** websocket and control ***
 
 	prepareWsServer(mux, handler)
+	prepareControlServer(mux, handler)
 
 	// *** simple debug http ***
 
@@ -61,6 +62,23 @@ func (s *App) Run() error {
 
 // route preparation
 // -----------------------------------------------------------------------
+
+func prepareControlServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
+	// GET
+	mux.HandleFunc("/sign-in",
+		func(w http.ResponseWriter, r *http.Request) {
+			bytes, _ := json.Marshal(handler.RoomService.Rooms)
+			w.Header().Add("Content-Type", "application/json")
+			w.Write(bytes)
+		})
+	// POST
+	mux.HandleFunc("/topic",
+		func(w http.ResponseWriter, r *http.Request) {
+			bytes, _ := json.Marshal(handler.RoomService.Rooms)
+			w.Header().Add("Content-Type", "application/json")
+			w.Write(bytes)
+		})
+}
 
 func prepareWsServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 	var upgrader = websocket.Upgrader{
