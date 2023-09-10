@@ -3,7 +3,7 @@ package overWs
 import (
 	"fmt"
 	"ilserver/domain"
-	"ilserver/service"
+	"ilserver/service/overWs"
 	"ilserver/transport/overWsDto"
 	"log"
 	"strconv"
@@ -30,25 +30,25 @@ func (he HandlerError) Error() string {
 // -----------------------------------------------------------------------
 
 // TODO: должен отправлять пакеты сам?
-type CommonHandler struct {
+type Handler struct {
 	Mx                     sync.RWMutex
 	RemoteAddrAndProfileId map[string]string
 	ProfileIdAndConn       map[string]*websocket.Conn
 
-	RoomService *service.RoomService
+	RoomService *overWs.RoomService
 }
 
-func NewCommonHandler() *CommonHandler {
-	return &CommonHandler{
+func NewHandler() *Handler {
+	return &Handler{
 		ProfileIdAndConn:       make(map[string]*websocket.Conn),
 		RemoteAddrAndProfileId: make(map[string]string),
-		RoomService:            service.NewRoomService(),
+		RoomService:            overWs.NewRoomService(),
 	}
 }
 
 // -----------------------------------------------------------------------
 
-func (h *CommonHandler) AddConn(conn *websocket.Conn) {
+func (h *Handler) AddConn(conn *websocket.Conn) {
 	profileId := uuid.New().String()
 	remoteAddr := conn.RemoteAddr().String()
 
@@ -62,7 +62,7 @@ func (h *CommonHandler) AddConn(conn *websocket.Conn) {
 }
 
 // private...
-func (h *CommonHandler) removeConn(conn *websocket.Conn) {
+func (h *Handler) removeConn(conn *websocket.Conn) {
 	available, profileId := h.ProfileIdByConn(conn)
 	if available {
 		h.Mx.Lock()
@@ -75,7 +75,7 @@ func (h *CommonHandler) removeConn(conn *websocket.Conn) {
 	// may already be removed
 }
 
-func (h *CommonHandler) RemoveConnAndClose(conn *websocket.Conn) error {
+func (h *Handler) RemoveConnAndClose(conn *websocket.Conn) error {
 	h.removeConn(conn)
 
 	// ***
@@ -90,7 +90,7 @@ func (h *CommonHandler) RemoveConnAndClose(conn *websocket.Conn) error {
 }
 
 // TODO: изменить порядок выходных параметров (?)
-func (h *CommonHandler) ProfileIdByConn(conn *websocket.Conn) (bool, string) {
+func (h *Handler) ProfileIdByConn(conn *websocket.Conn) (bool, string) {
 	h.Mx.RLock()
 	remoteAddr := conn.RemoteAddr().String()
 	profileId, avb := h.RemoteAddrAndProfileId[remoteAddr]
@@ -101,7 +101,7 @@ func (h *CommonHandler) ProfileIdByConn(conn *websocket.Conn) (bool, string) {
 
 // -----------------------------------------------------------------------
 
-func (h *CommonHandler) Err(conn *websocket.Conn, opCode int, code int) error {
+func (h *Handler) Err(conn *websocket.Conn, opCode int, code int) error {
 	srvErr := overWsDto.SvrErrBody{
 		Err: overWsDto.Err{
 			Id: code,
@@ -121,7 +121,7 @@ func (h *CommonHandler) Err(conn *websocket.Conn, opCode int, code int) error {
 // -----------------------------------------------------------------------
 
 // TODO: что передать в этом метод body или raw?
-func (h *CommonHandler) SearchingStart(
+func (h *Handler) SearchingStart(
 	conn *websocket.Conn, reqDto overWsDto.CliSearchingStartBodyClient) error {
 
 	if !reqDto.IsValid() {
@@ -166,7 +166,7 @@ func (h *CommonHandler) SearchingStart(
 	return conn.WriteMessage(websocket.TextMessage, packBytes)
 }
 
-func (h *CommonHandler) SearchingStop(
+func (h *Handler) SearchingStop(
 	conn *websocket.Conn, reqDto overWsDto.CliSearchingStopBody) error {
 
 	// TODO: будет тут реализация?
@@ -174,7 +174,7 @@ func (h *CommonHandler) SearchingStop(
 	return nil
 }
 
-func (h *CommonHandler) ChattingNewMessage(
+func (h *Handler) ChattingNewMessage(
 	conn *websocket.Conn, reqDto overWsDto.CliChattingNewMessageBody) error {
 
 	if !reqDto.IsValid() {
@@ -227,7 +227,7 @@ func (h *CommonHandler) ChattingNewMessage(
 	return nil
 }
 
-func (h *CommonHandler) ChoosingUsersChosen(
+func (h *Handler) ChoosingUsersChosen(
 	conn *websocket.Conn, reqDto overWsDto.CliChoosingUsersChosenBody) error {
 
 	available, profileId := h.ProfileIdByConn(conn)

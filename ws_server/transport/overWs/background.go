@@ -8,7 +8,7 @@ import (
 )
 
 // TODO: очистка отключенных пользователей
-func BackgroundUpdateRooms(h *CommonHandler) {
+func BackgroundUpdateRooms(h *Handler) {
 	go func() {
 		for {
 			select {

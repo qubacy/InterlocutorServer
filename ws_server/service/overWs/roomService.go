@@ -1,4 +1,4 @@
-package service
+package overWs
 
 import (
 	"ilserver/domain"
@@ -16,9 +16,7 @@ type UpdateRoomMessage struct {
 }
 
 type RoomService struct {
-	Mx sync.RWMutex
-
-	// TODO: преобразовать в список
+	Mx    sync.RWMutex
 	Rooms []domain.Room
 
 	// ***

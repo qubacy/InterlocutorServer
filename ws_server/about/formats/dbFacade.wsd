@@ -25,7 +25,6 @@ class Admins {
     Idr: Integer
     Login: Text
     Pass: Text
-    RefreshTokenHash: Text
 }
 
 @enduml

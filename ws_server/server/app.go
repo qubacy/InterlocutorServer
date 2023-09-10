@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"ilserver/domain"
 	"ilserver/repository"
+	"ilserver/transport/control"
 	"ilserver/transport/overWs"
 	"ilserver/transport/overWsDto"
 	"log"
@@ -27,8 +28,12 @@ func NewApp() *App {
 // -----------------------------------------------------------------------
 
 func (s *App) Run() error {
-	handler := overWs.NewCommonHandler()
-	overWs.BackgroundUpdateRooms(handler)
+	wsHandler := overWs.NewHandler()
+	controlHandler := control.NewHandler()
+
+	// ***
+
+	overWs.BackgroundUpdateRooms(wsHandler)
 
 	// ***
 
@@ -36,15 +41,15 @@ func (s *App) Run() error {
 
 	// *** websocket and control ***
 
-	prepareWsServer(mux, handler)
-	prepareControlServer(mux, handler)
+	prepareWsServer(mux, wsHandler)
+	prepareControlServer(mux, controlHandler)
 
 	// *** simple debug http ***
 
 	var useDebugSvr bool = viper.GetBool(
 		"debug_server.use")
 	if useDebugSvr {
-		prepareDebugServer(mux, handler)
+		prepareDebugServer(mux, wsHandler)
 	}
 
 	// ***
@@ -63,24 +68,13 @@ func (s *App) Run() error {
 // route preparation
 // -----------------------------------------------------------------------
 
-func prepareControlServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
-	// GET
-	mux.HandleFunc("/sign-in",
-		func(w http.ResponseWriter, r *http.Request) {
-			bytes, _ := json.Marshal(handler.RoomService.Rooms)
-			w.Header().Add("Content-Type", "application/json")
-			w.Write(bytes)
-		})
-	// POST
-	mux.HandleFunc("/topic",
-		func(w http.ResponseWriter, r *http.Request) {
-			bytes, _ := json.Marshal(handler.RoomService.Rooms)
-			w.Header().Add("Content-Type", "application/json")
-			w.Write(bytes)
-		})
+func prepareControlServer(mux *http.ServeMux, handler *control.Handler) {
+	mux.HandleFunc("/sign-in", handler.SignIn)
+	mux.HandleFunc("/topic", handler.PostTopic)
+	mux.HandleFunc("/topics", handler.GetTopics)
 }
 
-func prepareWsServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
+func prepareWsServer(mux *http.ServeMux, handler *overWs.Handler) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -102,15 +96,27 @@ func prepareWsServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 	})
 }
 
-func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
+func prepareDebugServer(mux *http.ServeMux, handler *overWs.Handler) {
+	// GET
 	mux.HandleFunc("/debug/runtime/rooms",
 		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				http.NotFound(w, r)
+				return
+			}
+
 			bytes, _ := json.Marshal(handler.RoomService.Rooms)
 			w.Header().Add("Content-Type", "application/json")
 			w.Write(bytes)
 		})
+	// GET
 	mux.HandleFunc("/debug/database/admin-count",
 		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				w.Write([]byte("Method is not GET"))
+				return
+			}
+
 			err, count := repository.Instance().RecordCountInTable("Admins")
 			if err != nil {
 				w.Write([]byte(err.Error()))
@@ -119,8 +125,14 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 			w.Write([]byte(
 				strconv.Itoa(count)))
 		})
-	mux.HandleFunc("/debug/database/has-admin",
+	// GET
+	mux.HandleFunc("/debug/database/has-admin-with-login",
 		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				w.Write([]byte("Method is not GET"))
+				return
+			}
+
 			login := r.URL.Query().Get("login")
 			err, has := repository.Instance().HasAdminByLogin(login)
 
@@ -172,8 +184,14 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 			w.Write([]byte(
 				strconv.FormatInt(idr, 10)))
 		})
+	// POST
 	mux.HandleFunc("/debug/database/update-admin-pass",
 		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				w.Write([]byte("Method is not POST"))
+				return
+			}
+
 			err := r.ParseForm()
 			if err != nil {
 				w.Write([]byte(err.Error()))
@@ -236,11 +254,31 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 			w.Header().Add("Content-Type", "application/json")
 			w.Write(bytes)
 		})
+	// GET
+	mux.HandleFunc("/debug/database/has-admin-with-login-and-pass",
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				w.Write([]byte("Method is not GET"))
+				return
+			}
+
+			pass := r.URL.Query().Get("pass")
+			login := r.URL.Query().Get("login")
+			err, has := repository.Instance().HasAdminWithLoginAndPass(
+				login, pass)
+
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+			w.Write([]byte(
+				strconv.FormatBool(has)))
+		})
 }
 
 // -----------------------------------------------------------------------
 
-func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
+func listen(handler *overWs.Handler, conn *websocket.Conn) error {
 	handler.AddConn(conn)
 
 	for {
@@ -301,7 +339,7 @@ func listen(handler *overWs.CommonHandler, conn *websocket.Conn) error {
 	}
 }
 
-func routeWsPack(handler *overWs.CommonHandler, conn *websocket.Conn, pack overWsDto.Pack) error {
+func routeWsPack(handler *overWs.Handler, conn *websocket.Conn, pack overWsDto.Pack) error {
 	bytes, err := json.Marshal(pack.RawBody)
 	if err != nil {
 		return err

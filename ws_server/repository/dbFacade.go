@@ -99,8 +99,7 @@ func (r *DbFacade) createAdmins() error {
 		"CREATE TABLE IF NOT EXISTS Admins( " +
 			"    Idr INTEGER PRIMARY KEY AUTOINCREMENT, " +
 			"    Login TEXT UNIQUE NOT NULL, " +
-			"    Pass TEXT NOT NULL, " +
-			"    RefreshTokenHash TEXT NULL" +
+			"    Pass TEXT NOT NULL " +
 			"); "
 
 	_, err := r.db.Exec(tq)
@@ -315,4 +314,43 @@ func (r *DbFacade) SelectRandomOneTopic(lang int) (error, domain.Topic) {
 			domain.Topic{}
 	}
 	return nil, tc
+}
+
+func (r *DbFacade) HasAdminWithLoginAndPass(login, pass string) (error, bool) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"SELECT count(*) AS RecordCount " +
+			"FROM [Admins] " +
+			"WHERE [Admins].[Login] = ? " +
+			"AND [Admins].[Pass] = ?;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err), false
+	}
+	defer stmt.Close() // ignore err!
+
+	// ***
+
+	rows, err := stmt.Query(login, pass)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err), false
+	}
+	defer rows.Close()
+
+	// ***
+
+	var recordCount int
+	if rows.Next() {
+		err = rows.Scan(&recordCount)
+		if err != nil {
+			return fmt.Errorf("scan next row with err %v", err), false
+		}
+	} else {
+		return fmt.Errorf("rows count is zero"), false
+	}
+
+	return nil, recordCount > 0
 }
