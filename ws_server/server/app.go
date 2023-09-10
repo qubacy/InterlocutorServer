@@ -114,6 +114,7 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 			err, count := repository.Instance().RecordCountInTable("Admins")
 			if err != nil {
 				w.Write([]byte(err.Error()))
+				return
 			}
 			w.Write([]byte(
 				strconv.Itoa(count)))
@@ -125,15 +126,23 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 
 			if err != nil {
 				w.Write([]byte(err.Error()))
+				return
 			}
 			w.Write([]byte(
 				strconv.FormatBool(has)))
 		})
+	// POST
 	mux.HandleFunc("/debug/database/insert-topic",
 		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				w.Write([]byte("Method is not POST"))
+				return
+			}
+
 			err := r.ParseForm()
 			if err != nil {
 				w.Write([]byte(err.Error()))
+				return
 			}
 
 			// ***
@@ -144,6 +153,7 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 			lang, err := strconv.Atoi(langAsStr)
 			if err != nil {
 				w.Write([]byte(err.Error()))
+				return
 			}
 
 			// ***
@@ -157,6 +167,7 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 
 			if err != nil {
 				w.Write([]byte(err.Error()))
+				return
 			}
 			w.Write([]byte(
 				strconv.FormatInt(idr, 10)))
@@ -166,6 +177,7 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 			err := r.ParseForm()
 			if err != nil {
 				w.Write([]byte(err.Error()))
+				return
 			}
 
 			// ***
@@ -178,9 +190,51 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.CommonHandler) {
 
 			if err != nil {
 				w.Write([]byte(err.Error()))
+				return
 			}
 			w.Write([]byte(
 				strconv.FormatBool(true)))
+		})
+	// GET
+	mux.HandleFunc("/debug/database/random-one-topic",
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				w.Write([]byte("Method is not GET"))
+				return
+			}
+
+			err := r.ParseForm()
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			// ***
+
+			langAsStr := r.Form.Get("lang")
+			lang, err := strconv.Atoi(langAsStr)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			// ***
+
+			err, tc := repository.Instance().SelectRandomOneTopic(lang)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			// ***
+
+			bytes, err := json.Marshal(tc)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+			w.Header().Add("Content-Type", "application/json")
+			w.Write(bytes)
 		})
 }
 

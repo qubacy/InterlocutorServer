@@ -274,3 +274,45 @@ func (r *DbFacade) UpdateAdminPass(login, newPass string) error {
 
 	return nil
 }
+
+func (r *DbFacade) SelectRandomOneTopic(lang int) (error, domain.Topic) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"SELECT * FROM Topics " +
+			"WHERE Lang = ? " +
+			"ORDER BY random() " +
+			"LIMIT 1;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err),
+			domain.Topic{}
+	}
+	defer stmt.Close()
+
+	// ***
+
+	rows, err := stmt.Query(lang)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err),
+			domain.Topic{}
+	}
+	defer rows.Close()
+
+	// ***
+
+	tc := domain.Topic{}
+	if rows.Next() {
+		err = rows.Scan(&tc.Idr, &tc.Lang, &tc.Name)
+		if err != nil {
+			return fmt.Errorf("scan next row with err %v", err),
+				domain.Topic{}
+		}
+	} else {
+		return fmt.Errorf("rows count is zero"),
+			domain.Topic{}
+	}
+	return nil, tc
+}
