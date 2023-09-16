@@ -6,5 +6,6 @@ type SignInReq struct {
 }
 
 type SignInRes struct {
-	AccessToken string
+	AccessToken string `json:"accessToken"`
+	ErrorText   string `json:"errorText"`
 }

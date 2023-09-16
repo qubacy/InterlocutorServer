@@ -1,6 +1,7 @@
 package control
 
 import (
+	"encoding/json"
 	"ilserver/service/control"
 	"ilserver/transport/controlDto"
 	"net/http"
@@ -51,17 +52,28 @@ func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	// ***
 
-	//
 	err, dtoRes := h.authService.SignIn(dtoReq)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	dtoRes.AccessToken = ""
+	// ***
+
+	resultBytes, err := json.Marshal(dtoRes)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(resultBytes)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) PostTopic(w http.ResponseWriter, r *http.Request) {
