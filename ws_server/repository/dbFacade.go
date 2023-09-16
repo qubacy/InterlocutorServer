@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"ilserver/domain"
+	"strconv"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -246,6 +247,42 @@ func (r *DbFacade) InsertTopic(topic domain.Topic) (error, int64) {
 	}
 
 	return nil, lastInsertId
+}
+
+func (r *DbFacade) InsertTopics(topics []domain.Topic) error {
+	if len(topics) == 0 {
+		return nil
+	}
+
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	tq := "INSERT INTO [Topics] (Lang, Name) " +
+		"VALUES "
+	for i := range topics {
+		tq += "("
+		tq += strconv.Itoa(topics[i].Lang) + ", "
+		tq += ("'" + topics[i].Name + "'")
+		tq += ")"
+
+		if i != len(topics)-1 {
+			tq += ", "
+		}
+	}
+	tq += ";"
+
+	// ***
+
+	_, err := r.db.Exec(tq)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err)
+	}
+
+	// ***
+
+	return nil
 }
 
 func (r *DbFacade) UpdateAdminPass(login, newPass string) error {

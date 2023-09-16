@@ -6,8 +6,10 @@ import (
 	"ilserver/domain"
 	"ilserver/repository"
 	"ilserver/transport/control"
+	"ilserver/transport/debugDto"
 	"ilserver/transport/overWs"
 	"ilserver/transport/overWsDto"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -273,6 +275,47 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.Handler) {
 			}
 			w.Write([]byte(
 				strconv.FormatBool(has)))
+		})
+	// POST
+	mux.HandleFunc("/debug/database/insert-topics",
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				w.Write([]byte("Method is not POST"))
+				return
+			}
+
+			jsonTopics, err := io.ReadAll(r.Body)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+			defer r.Body.Close()
+
+			// ***
+
+			var topicsDto debugDto.Topics
+			err = json.Unmarshal(jsonTopics, &topicsDto)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			// ***
+
+			err, topics := debugDto.TopicsToDomain(topicsDto)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			// ***
+
+			err = repository.Instance().InsertTopics(topics)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+			w.Write([]byte("OK"))
 		})
 }
 
