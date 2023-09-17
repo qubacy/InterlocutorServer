@@ -24,3 +24,6 @@ database:
 debug_server:
   use: true
 
+control_server:
+  token_duration: 5m
+

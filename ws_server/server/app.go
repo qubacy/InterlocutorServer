@@ -67,13 +67,13 @@ func (s *App) Run() error {
 	return s.httpServer.ListenAndServe()
 }
 
-// route preparation
+// high level route preparation
 // -----------------------------------------------------------------------
 
 func prepareControlServer(mux *http.ServeMux, handler *control.Handler) {
-	mux.HandleFunc("/sign-in", handler.SignIn)
-	mux.HandleFunc("/topic", handler.PostTopic)
-	mux.HandleFunc("/topics", handler.GetTopics)
+	mux.HandleFunc("/sign-in", handler.SignIn) // POST
+	mux.HandleFunc("/topic", handler.Topic)    // POST
+	mux.HandleFunc("/topics", handler.Topics)  // POST, GET
 }
 
 func prepareWsServer(mux *http.ServeMux, handler *overWs.Handler) {
@@ -319,6 +319,7 @@ func prepareDebugServer(mux *http.ServeMux, handler *overWs.Handler) {
 		})
 }
 
+// websocket server details
 // -----------------------------------------------------------------------
 
 func listen(handler *overWs.Handler, conn *websocket.Conn) error {
