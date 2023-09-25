@@ -58,3 +58,34 @@ func (ts *TopicService) PostTopic(dtoReq controlDto.PostTopicReq) (error, contro
 
 	return nil, res
 }
+
+func (ts *TopicService) GetTopics(dtoReq controlDto.GetTopicsReq) (error, controlDto.GetTopicsRes) {
+	err, tokenOk, _ := middleware.ParseAndVerifyToken(dtoReq.AccessToken)
+	if err != nil {
+		return err, controlDto.GetTopicsRes{}
+	}
+
+	// ***
+
+	var res controlDto.GetTopicsRes
+
+	if !tokenOk {
+		res.Some = []controlDto.TopicDto{}
+		res.ErrorText = "access token expired"
+		return nil, res
+	}
+
+	err, topics := repository.Instance().SelectTopics()
+	if err != nil {
+		return err, controlDto.GetTopicsRes{}
+	}
+
+	for i := range topics {
+		res.ErrorText = ""
+		res.Some = append(
+			res.Some, controlDto.DomainToTopicDto(
+				topics[i]))
+	}
+
+	return nil, res
+}

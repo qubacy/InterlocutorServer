@@ -144,7 +144,7 @@ func (r *DbFacade) inflateAdmins() error {
 	return err
 }
 
-// public
+// admins
 // -----------------------------------------------------------------------
 
 func (r *DbFacade) RecordCountInTable(name string) (error, int) {
@@ -218,6 +218,154 @@ func (r *DbFacade) HasAdminByLogin(login string) (error, bool) {
 	return nil, recordCount > 0
 }
 
+func (r *DbFacade) UpdateAdminPass(login, newPass string) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"UPDATE [Admins] SET [Pass] = ? " +
+			"WHERE [Login] == ?;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err)
+	}
+	defer stmt.Close()
+
+	// ***
+
+	_, err = stmt.Exec(newPass, login)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err)
+	}
+
+	// ***
+
+	return nil
+}
+
+func (r *DbFacade) HasAdminWithLoginAndPass(login, pass string) (error, bool) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"SELECT count(*) AS RecordCount " +
+			"FROM [Admins] " +
+			"WHERE [Admins].[Login] = ? " +
+			"AND [Admins].[Pass] = ?;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err), false
+	}
+	defer stmt.Close() // ignore err!
+
+	// ***
+
+	rows, err := stmt.Query(login, pass)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err), false
+	}
+	defer rows.Close()
+
+	// ***
+
+	var recordCount int
+	if rows.Next() {
+		err = rows.Scan(&recordCount)
+		if err != nil {
+			return fmt.Errorf("scan next row with err %v", err), false
+		}
+	} else {
+		return fmt.Errorf("rows count is zero"), false
+	}
+
+	return nil, recordCount > 0
+}
+
+// topics
+// -----------------------------------------------------------------------
+
+func (r *DbFacade) SelectRandomOneTopic(lang int) (error, domain.Topic) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"SELECT * FROM Topics " +
+			"WHERE Lang = ? " +
+			"ORDER BY random() " +
+			"LIMIT 1;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err),
+			domain.Topic{}
+	}
+	defer stmt.Close()
+
+	// ***
+
+	rows, err := stmt.Query(lang)
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err),
+			domain.Topic{}
+	}
+	defer rows.Close()
+
+	// ***
+
+	tc := domain.Topic{}
+	if rows.Next() {
+		err = rows.Scan(&tc.Idr, &tc.Lang, &tc.Name)
+		if err != nil {
+			return fmt.Errorf("scan next row with err %v", err),
+				domain.Topic{}
+		}
+	} else {
+		return fmt.Errorf("rows count is zero"),
+			domain.Topic{}
+	}
+	return nil, tc
+}
+
+func (r *DbFacade) SelectTopics() (error, []domain.Topic) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+
+	// ***
+
+	stmt, err := r.db.Prepare(
+		"SELECT * FROM Topics;")
+	if err != nil {
+		return fmt.Errorf("prepare query failed %v", err),
+			nil
+	}
+	defer stmt.Close()
+
+	// ***
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return fmt.Errorf("execute query failed %v", err),
+			nil
+	}
+	defer rows.Close()
+
+	// ***
+
+	topics := []domain.Topic{}
+	for rows.Next() {
+		one := domain.Topic{}
+		if err := rows.Scan(&one.Idr, &one.Lang, &one.Name); err != nil {
+			return fmt.Errorf("scan next row with err %v", err),
+				[]domain.Topic{}
+		}
+
+		topics = append(topics, one)
+	}
+	return nil, topics
+}
+
 func (r *DbFacade) InsertTopic(topic domain.Topic) (error, int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -283,111 +431,4 @@ func (r *DbFacade) InsertTopics(topics []domain.Topic) error {
 	// ***
 
 	return nil
-}
-
-func (r *DbFacade) UpdateAdminPass(login, newPass string) error {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	// ***
-
-	stmt, err := r.db.Prepare(
-		"UPDATE [Admins] SET [Pass] = ? " +
-			"WHERE [Login] == ?;")
-	if err != nil {
-		return fmt.Errorf("prepare query failed %v", err)
-	}
-	defer stmt.Close()
-
-	// ***
-
-	_, err = stmt.Exec(newPass, login)
-	if err != nil {
-		return fmt.Errorf("execute query failed %v", err)
-	}
-
-	// ***
-
-	return nil
-}
-
-func (r *DbFacade) SelectRandomOneTopic(lang int) (error, domain.Topic) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	// ***
-
-	stmt, err := r.db.Prepare(
-		"SELECT * FROM Topics " +
-			"WHERE Lang = ? " +
-			"ORDER BY random() " +
-			"LIMIT 1;")
-	if err != nil {
-		return fmt.Errorf("prepare query failed %v", err),
-			domain.Topic{}
-	}
-	defer stmt.Close()
-
-	// ***
-
-	rows, err := stmt.Query(lang)
-	if err != nil {
-		return fmt.Errorf("execute query failed %v", err),
-			domain.Topic{}
-	}
-	defer rows.Close()
-
-	// ***
-
-	tc := domain.Topic{}
-	if rows.Next() {
-		err = rows.Scan(&tc.Idr, &tc.Lang, &tc.Name)
-		if err != nil {
-			return fmt.Errorf("scan next row with err %v", err),
-				domain.Topic{}
-		}
-	} else {
-		return fmt.Errorf("rows count is zero"),
-			domain.Topic{}
-	}
-	return nil, tc
-}
-
-func (r *DbFacade) HasAdminWithLoginAndPass(login, pass string) (error, bool) {
-	r.mx.Lock()
-	defer r.mx.Unlock()
-
-	// ***
-
-	stmt, err := r.db.Prepare(
-		"SELECT count(*) AS RecordCount " +
-			"FROM [Admins] " +
-			"WHERE [Admins].[Login] = ? " +
-			"AND [Admins].[Pass] = ?;")
-	if err != nil {
-		return fmt.Errorf("prepare query failed %v", err), false
-	}
-	defer stmt.Close() // ignore err!
-
-	// ***
-
-	rows, err := stmt.Query(login, pass)
-	if err != nil {
-		return fmt.Errorf("execute query failed %v", err), false
-	}
-	defer rows.Close()
-
-	// ***
-
-	var recordCount int
-	if rows.Next() {
-		err = rows.Scan(&recordCount)
-		if err != nil {
-			return fmt.Errorf("scan next row with err %v", err), false
-		}
-	} else {
-		return fmt.Errorf("rows count is zero"), false
-	}
-
-	return nil, recordCount > 0
 }
