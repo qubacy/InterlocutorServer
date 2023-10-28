@@ -1,4 +1,4 @@
-# Packet Format Over WS 🗑
+# <div style="text-align: center;">Packet Format Over WS 🗑</div>
 
 ## Inside the server
 
@@ -6,21 +6,21 @@
 
 ## Operation (OP)
 
-```
-enum operation : int {
-    SEARCHING_START        = 0   |
-    SEARCHING_STOP         = 1   | ---> SEARCHING
-    SEARCHING_GAME_FOUND   = 2   |
+``` C++
+enum class operation : int {
+    SEARCHING_START        = 0, // |
+    SEARCHING_STOP         = 1, // | ---> SEARCHING
+    SEARCHING_GAME_FOUND   = 2, // |
 
-    CHATTING_NEW_MESSAGE   = 3   | ---> CHATTING
-    CHATTING_STAGE_IS_OVER = 4   |
+    CHATTING_NEW_MESSAGE   = 3, // | ---> CHATTING
+    CHATTING_STAGE_IS_OVER = 4, // |
 
-    CHOOSING_USERS_CHOSEN  = 5   | ---> CHOOSING
-    CHOOSING_STAGE_IS_OVER = 6   |
+    CHOOSING_USERS_CHOSEN  = 5, // | ---> CHOOSING
+    CHOOSING_STAGE_IS_OVER = 6, // |
 }
 ```
 
-## <center>SEARCHING</center>
+## <div style="text-align: center;">SEARCHING</div>
 ## OPS: `Searching start`, `Searching game found`, `Chatting new message`
 
 ### Request
@@ -49,7 +49,7 @@ enum operation : int {
 }
 ```
 
-### ... over time (see [config.yml](../../config/config.yml)) ...
+### ... over time (see [config.yml](../../../config/config.yml)) ...
 
 ### *Async* Responses
 #### `Searching game found`
@@ -96,7 +96,7 @@ enum operation : int {
 > Until information about the found game comes.
 > Or just gracefully close the websocket.
 
-## <center>CHATTING</center>
+## <div style="text-align: center;">CHATTING</div>
 ## OPS: `Chatting new message`, `Chatting stage is over`
 
 ### Request
@@ -128,7 +128,7 @@ enum operation : int {
 
 > Your own message will arrive almost in sync.
 
-### ... over time (see [config.yml](../../config/config.yml)) ...
+### ... over time (see [config.yml](../../../config/config.yml)) ...
 
 ### *Async* Response
 #### `Chatting stage is over`
@@ -139,7 +139,7 @@ enum operation : int {
 }
 ```
 
-## <center>CHOOSING</center>
+## <div style="text-align: center;">CHOOSING</div>
 ## OPS: `Choosing users chosen`
 
 ### Request
@@ -157,7 +157,7 @@ enum operation : int {
 }
 ```
 
-### ... over time (see [config.yml](../../config/config.yml)) ...
+### ... over time (see [config.yml](../../../config/config.yml)) ...
 
 ### *Async* Response
 #### `Choosing users chosen`
@@ -174,6 +174,3 @@ enum operation : int {
   }
 }
 ```
-
-# Packet Format Control Server
-

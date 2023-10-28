@@ -20,6 +20,7 @@ func NewHandler() *Handler {
 	}
 }
 
+// public
 // -----------------------------------------------------------------------
 
 func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
@@ -198,3 +199,6 @@ func (h *Handler) getTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// private
+// -----------------------------------------------------------------------

@@ -1,4 +1,4 @@
-package repository
+package sqlite
 
 import (
 	"database/sql"
@@ -8,146 +8,45 @@ import (
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/spf13/viper"
 )
 
 // -----------------------------------------------------------------------
 
-type DbFacade struct {
+type Storage struct {
 	mx sync.Mutex
 	db *sql.DB
 }
 
-var inst *DbFacade = nil
+var once = sync.Once{}
+var instance *Storage = nil
+var initializationError error // user friendly error
 
-func Instance() *DbFacade {
-	return inst
-}
-
+// constructor
 // -----------------------------------------------------------------------
 
-var once = sync.Once{}
-
-func Init() error {
-	var returnError error = nil
+func Instance() (*Storage, error) {
 	once.Do(func() {
-		db, err := sql.Open("sqlite3", "../repository/"+
-			viper.GetString("database.file"))
-
-		if err != nil {
-			returnError =
-				fmt.Errorf("Init, sql.Open err: %v", err)
-			return
-		}
-
-		// ***
-
-		inst =
-			newDbFacade(db)
-
-		// ***
-
-		err = inst.createTopics()
-		if err != nil {
-			returnError =
-				fmt.Errorf("Init, inst.createTopics err: %v", err)
-			return
-		}
-
-		// ***
-
-		err = inst.createAdmins()
-		if err != nil {
-			returnError =
-				fmt.Errorf("Init, inst.createAdmins err: %v", err)
-			return
-		}
-		err = inst.inflateAdminsIfNeed()
-		if err != nil {
-			returnError =
-				fmt.Errorf("Init, inst.inflateAdminsIfNeed err: %v", err)
-			return
-		}
+		initializationError =
+			initialize()
 	})
-
-	return returnError
+	return instance, initializationError
+}
+func Free() {
+	// TODO: что делать с ошибкой?
+	instance.db.Close()
 }
 
-func newDbFacade(db *sql.DB) *DbFacade {
-	return &DbFacade{
+func newStorage(db *sql.DB) *Storage {
+	return &Storage{
 		mx: sync.Mutex{},
 		db: db,
 	}
 }
 
-// private
-// -----------------------------------------------------------------------
-
-func (r *DbFacade) createTopics() error {
-	tq :=
-		"CREATE TABLE IF NOT EXISTS Topics( " +
-			"    Idr INTEGER PRIMARY KEY AUTOINCREMENT, " +
-			"    Lang INTEGER NOT NULL, " +
-			"    Name TEXT NOT NULL " +
-			"); "
-
-	_, err := r.db.Exec(tq)
-	return err
-}
-
-func (r *DbFacade) createAdmins() error {
-	tq :=
-		"CREATE TABLE IF NOT EXISTS Admins( " +
-			"    Idr INTEGER PRIMARY KEY AUTOINCREMENT, " +
-			"    Login TEXT UNIQUE NOT NULL, " +
-			"    Pass TEXT NOT NULL " +
-			"); "
-
-	_, err := r.db.Exec(tq)
-	return err
-}
-
-func (r *DbFacade) inflateAdminsIfNeed() error {
-	err, num :=
-		inst.RecordCountInTable("Admins")
-	if err != nil {
-		return fmt.Errorf("inflateAdminsIfNeed, inst.RecordCountInTable"+
-			"err: %v", err)
-	}
-
-	// ***
-
-	if num == 0 {
-		err = inst.inflateAdmins()
-		if err != nil {
-			return fmt.Errorf("inflateAdminsIfNeed, inst.inflateAdmins "+
-				"err: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (r *DbFacade) inflateAdmins() error {
-	stmt, err := r.db.Prepare(
-		"INSERT INTO [Admins] (Login, Pass) " +
-			"VALUES (?, ?);")
-
-	if err != nil {
-		return err
-	}
-
-	login := viper.GetString("database.default_admin_entry.login")
-	pass := viper.GetString("database.default_admin_entry.pass")
-
-	_, err = stmt.Exec(login, pass)
-	return err
-}
-
 // admins
 // -----------------------------------------------------------------------
 
-func (r *DbFacade) RecordCountInTable(name string) (error, int) {
+func (r *Storage) RecordCountInTable(name string) (error, int) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -181,7 +80,7 @@ func (r *DbFacade) RecordCountInTable(name string) (error, int) {
 	return nil, recordCount
 }
 
-func (r *DbFacade) HasAdminByLogin(login string) (error, bool) {
+func (r *Storage) HasAdminByLogin(login string) (error, bool) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -218,7 +117,7 @@ func (r *DbFacade) HasAdminByLogin(login string) (error, bool) {
 	return nil, recordCount > 0
 }
 
-func (r *DbFacade) UpdateAdminPass(login, newPass string) error {
+func (r *Storage) UpdateAdminPass(login, newPass string) error {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -244,7 +143,7 @@ func (r *DbFacade) UpdateAdminPass(login, newPass string) error {
 	return nil
 }
 
-func (r *DbFacade) HasAdminWithLoginAndPass(login, pass string) (error, bool) {
+func (r *Storage) HasAdminWithLoginAndPass(login, pass string) (error, bool) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -286,7 +185,7 @@ func (r *DbFacade) HasAdminWithLoginAndPass(login, pass string) (error, bool) {
 // topics
 // -----------------------------------------------------------------------
 
-func (r *DbFacade) SelectRandomOneTopic(lang int) (error, domain.Topic) {
+func (r *Storage) SelectRandomOneTopic(lang int) (error, domain.Topic) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -328,7 +227,7 @@ func (r *DbFacade) SelectRandomOneTopic(lang int) (error, domain.Topic) {
 	return nil, tc
 }
 
-func (r *DbFacade) SelectTopics() (error, []domain.Topic) {
+func (r *Storage) SelectTopics() (error, []domain.Topic) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -366,7 +265,7 @@ func (r *DbFacade) SelectTopics() (error, []domain.Topic) {
 	return nil, topics
 }
 
-func (r *DbFacade) InsertTopic(topic domain.Topic) (error, int64) {
+func (r *Storage) InsertTopic(topic domain.Topic) (error, int64) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
 
@@ -397,7 +296,7 @@ func (r *DbFacade) InsertTopic(topic domain.Topic) (error, int64) {
 	return nil, lastInsertId
 }
 
-func (r *DbFacade) InsertTopics(topics []domain.Topic) error {
+func (r *Storage) InsertTopics(topics []domain.Topic) error {
 	if len(topics) == 0 {
 		return nil
 	}

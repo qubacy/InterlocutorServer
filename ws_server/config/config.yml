@@ -1,5 +1,8 @@
 port: "47777"
 
+# main logic
+# -----------------------------------------------
+
 update_rooms:
   timeout: 16ms
 
@@ -15,15 +18,29 @@ background:
     with_searching_state:
       interval_from_last_update_to_next_state: 10s
 
-database:
-  file: "storage.db"
-  default_admin_entry:
-    login: "admin"
-    pass: "admin"
-
-debug_server:
-  use: true
+# -----------------------------------------------
 
 control_server:
   token_duration: 5m
+
+debug_server:
+  launch: true
+
+# -----------------------------------------------
+
+storage:
+  type: "sqlite"
+  sql:
+    sqlite:
+      file: "storage.db"
+
+    postgre:
+    # ...
+
+  memory:
+  # ...
+
+  default_admin_entry:
+    login: "admin"
+    pass: "admin"
 

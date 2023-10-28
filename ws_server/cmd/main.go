@@ -2,16 +2,16 @@ package main
 
 import (
 	"ilserver/config"
-	"ilserver/repository"
 	"ilserver/server"
+	"ilserver/storage"
 	"log"
 )
 
 func main() {
-	if err := config.Init(); err != nil {
+	if err := config.Initialize(); err != nil {
 		log.Fatal("Config initialization has been failed with err:", err)
 	}
-	if err := repository.Init(); err != nil {
+	if err := storage.Init(); err != nil {
 		log.Fatal("Repository initialization has been failed with err:", err)
 	}
 
