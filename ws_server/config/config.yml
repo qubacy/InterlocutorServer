@@ -22,6 +22,7 @@ background:
 
 control_server:
   token_duration: 5m
+  # TODO: add timeout process request
 
 debug_server:
   launch: true
@@ -31,7 +32,10 @@ debug_server:
 storage:
   type: "sqlite"
   sql:
+    initialization_timeout: 5s
+    
     sqlite:
+      directory: "../storage/"
       file: "storage.db"
 
     postgre:

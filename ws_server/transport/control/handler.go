@@ -97,6 +97,7 @@ func (h *Handler) Topics(w http.ResponseWriter, r *http.Request) {
 // -----------------------------------------------------------------------
 
 func (h *Handler) postTopic(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPost {
 		http.NotFound(w, r)
 		return

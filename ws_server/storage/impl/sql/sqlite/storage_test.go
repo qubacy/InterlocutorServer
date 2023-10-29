@@ -1,15 +1,18 @@
 package sqlite
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/spf13/viper"
 )
 
+// executed even if exactly one test is started!
 func TestMain(m *testing.M) {
 	fmt.Println("...start test main...")
 
@@ -32,6 +35,7 @@ func TestMain(m *testing.M) {
 		return
 	}
 
+	fmt.Println("...finish test main...")
 	os.Exit(code)
 }
 
@@ -85,12 +89,19 @@ func setUpViper() error {
 		return fmt.Errorf("Value by key '%v' is empty", key)
 	}
 
+	key = "storage.sql.initialization_timeout"
+	viper.Set(key, 1*time.Second)
+	if viper.GetDuration(key) == 0 {
+		return fmt.Errorf("Value by key '%v' is zero", key)
+	}
+
 	//...
 
 	return nil
 }
 
 func tearDown() error {
+	Free() // close all!
 	err := removeDatabaseFile()
 	if err != nil {
 		return err
@@ -108,7 +119,55 @@ func Test_Instance(t *testing.T) {
 		t.Fail()
 		return
 	}
-	defer Free()
+}
+
+func Test_RecordCountInTable_okk(t *testing.T) {
+	storage, err := Instance()
+	if err != nil {
+		t.Errorf("failed to get storage. Err: %v", err)
+		return
+	}
+
+	// ***
+
+	// attention empty context!
+	num, err := storage.RecordCountInTable(context.Background(), "Admins")
+	if err != nil {
+		t.Errorf("request failed. Err: %v", err)
+		return
+	}
+	if num != 1 {
+		t.Errorf("row count not equal 1")
+		return
+	}
+
+	// ***
+
+	num, err = storage.RecordCountInTable(context.Background(), "Topics")
+	if err != nil {
+		t.Errorf("request failed. Err: %v", err)
+		return
+	}
+	if num != 0 {
+		t.Errorf("row count not equal 0")
+		return
+	}
+}
+
+func Test_RecordCountInTable_err(t *testing.T) {
+	storage, err := Instance()
+	if err != nil {
+		t.Errorf("failed to get storage. Err: %v", err)
+		return
+	}
+
+	// ***
+
+	_, err = storage.RecordCountInTable(context.Background(), "UnknownTable")
+	if err == nil {
+		t.Errorf("table does not exist, but query completed")
+		return
+	}
 }
 
 // experiments

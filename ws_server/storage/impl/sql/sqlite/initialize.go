@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"ilserver/utility"
@@ -10,18 +11,20 @@ import (
 	"github.com/spf13/viper"
 )
 
-var databaseDirectory = "../storage/"
+var databaseDirectory = "../storage/" //
 
 func PathToDatabaseFile() string {
 	return databaseDirectory +
 		viper.GetString("storage.sql.sqlite.file")
 }
 
-func initialize() error {
+func initialize(ctx context.Context) error {
 	err := createDatabaseFile()
 	if err != nil {
 		return utility.CreateCustomError(initialize, err)
 	}
+
+	// ***
 
 	db, err := openDatabaseFile()
 	if err != nil {
@@ -29,23 +32,25 @@ func initialize() error {
 	}
 	instance = newStorage(db)
 
+	// ***
+
 	// TODO: добавить контекст с таймером?
-	return initializeTables()
+	return initializeTables(ctx)
 }
 
-func initializeTables() error {
-	err := instance.createTopics()
+func initializeTables(ctx context.Context) error {
+	err := instance.createTopics(ctx)
 	if err != nil {
 		return utility.CreateCustomError(initializeTables, err)
 	}
-	err = instance.createAdmins()
+	err = instance.createAdmins(ctx)
 	if err != nil {
 		return utility.CreateCustomError(initializeTables, err)
 	}
 
 	// ***
 
-	err = instance.inflateAdminsIfNeeded()
+	err = instance.inflateAdminsIfNeeded(ctx)
 	if err != nil {
 		return utility.CreateCustomError(initializeTables, err)
 	}
@@ -53,6 +58,7 @@ func initializeTables() error {
 	return nil
 }
 
+// work with file system
 // -----------------------------------------------------------------------
 
 func openDatabaseFile() (*sql.DB, error) {

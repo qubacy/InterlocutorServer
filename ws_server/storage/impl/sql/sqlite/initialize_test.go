@@ -8,18 +8,22 @@ import (
 
 // run all tests from file 'storage_test.go'
 
-func Test_createDatabaseFile(t *testing.T) {
-	// TODO:
-}
+func Test_operateDatabaseFile(t *testing.T) {
+	err := createDatabaseFile()
+	if err != nil {
+		fmt.Println("err:", err)
+		t.Fail()
+		return
+	}
 
-func Test_openDatabaseFile(t *testing.T) {
+	// ***
+
 	db, err := openDatabaseFile()
 	if err != nil {
 		fmt.Println("err:", err)
 		t.Fail()
 		return
 	}
-	defer db.Close()
 
 	// ***
 

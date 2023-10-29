@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"ilserver/utility"
 
 	"github.com/spf13/viper"
@@ -9,7 +10,7 @@ import (
 // create
 // -----------------------------------------------------------------------
 
-func (r *Storage) createTopics() error {
+func (r *Storage) createTopics(ctx context.Context) error {
 	tq :=
 		"CREATE TABLE IF NOT EXISTS Topics ( " +
 			"    Idr INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -17,7 +18,7 @@ func (r *Storage) createTopics() error {
 			"    Name TEXT NOT NULL " +
 			"); "
 
-	_, err := r.db.Exec(tq)
+	_, err := r.db.ExecContext(ctx, tq)
 	if err != nil {
 		return utility.CreateCustomError(
 			r.createTopics, err)
@@ -25,7 +26,7 @@ func (r *Storage) createTopics() error {
 	return nil
 }
 
-func (r *Storage) createAdmins() error {
+func (r *Storage) createAdmins(ctx context.Context) error {
 	tq :=
 		"CREATE TABLE IF NOT EXISTS Admins ( " +
 			"    Idr INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -33,7 +34,7 @@ func (r *Storage) createAdmins() error {
 			"    Pass TEXT NOT NULL " +
 			"); "
 
-	_, err := r.db.Exec(tq)
+	_, err := r.db.ExecContext(ctx, tq)
 	if err != nil {
 		return utility.CreateCustomError(
 			r.createAdmins, err)
@@ -44,8 +45,8 @@ func (r *Storage) createAdmins() error {
 // inflate
 // -----------------------------------------------------------------------
 
-func (r *Storage) inflateAdminsIfNeeded() error {
-	err, num := instance.RecordCountInTable("Admins")
+func (r *Storage) inflateAdminsIfNeeded(ctx context.Context) error {
+	num, err := instance.RecordCountInTable(ctx, "Admins")
 	if err != nil {
 		return utility.CreateCustomError(
 			r.inflateAdminsIfNeeded, err)
@@ -54,7 +55,7 @@ func (r *Storage) inflateAdminsIfNeeded() error {
 	// ***
 
 	if num == 0 {
-		err = instance.inflateAdmins()
+		err = instance.inflateAdmins(ctx)
 		if err != nil {
 			return utility.CreateCustomError(
 				r.inflateAdminsIfNeeded, err)
@@ -64,9 +65,9 @@ func (r *Storage) inflateAdminsIfNeeded() error {
 	return nil
 }
 
-func (r *Storage) inflateAdmins() error {
-	stmt, err := r.db.Prepare(
-		"INSERT INTO [Admins] (Login, Pass) " +
+func (r *Storage) inflateAdmins(ctx context.Context) error {
+	stmt, err := r.db.PrepareContext(ctx,
+		"INSERT INTO [Admins] (Login, Pass) "+
 			"VALUES (?, ?);")
 
 	if err != nil {
@@ -77,7 +78,7 @@ func (r *Storage) inflateAdmins() error {
 	login := viper.GetString("storage.default_admin_entry.login")
 	pass := viper.GetString("storage.default_admin_entry.pass")
 
-	_, err = stmt.Exec(login, pass)
+	_, err = stmt.ExecContext(ctx, login, pass)
 	if err != nil {
 		return utility.CreateCustomError(
 			r.inflateAdmins, err)
