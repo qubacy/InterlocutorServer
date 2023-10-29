@@ -8,7 +8,7 @@ import (
 type Storage interface {
 	RecordCountInTable(ctx context.Context, name string) (int, error)
 
-	// *** admin
+	// *** admin ***
 
 	InsertAdmin(ctx context.Context, admin domain.Admin) (int64, error)
 	HasAdminByLogin(ctx context.Context, login string) (bool, error)
@@ -18,7 +18,7 @@ type Storage interface {
 	UpdateAdminPasswordByLogin(ctx context.Context, login, password string) error
 	DeleteAdminByLogin(ctx context.Context, login string) error
 
-	// *** topic
+	// *** topic ***
 
 	InsertTopic(ctx context.Context, topic domain.Topic) (int64, error)
 	InsertTopics(ctx context.Context, topics []domain.Topic) error
@@ -26,4 +26,6 @@ type Storage interface {
 	Topic(ctx context.Context, idr int) (domain.Topic, error)
 	RandomTopic(ctx context.Context, lang int) (domain.Topic, error)
 	DeleteTopic(ctx context.Context, idr int) error
+
+	//...
 }

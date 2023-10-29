@@ -12,6 +12,7 @@ import (
 
 // -----------------------------------------------------------------------
 
+// thread safety...
 type Storage struct {
 	mx sync.Mutex
 	db *sql.DB
@@ -24,6 +25,7 @@ var initializationError error // user friendly error
 // constructor
 // -----------------------------------------------------------------------
 
+// initialize and free in one thread.
 func Instance() (*Storage, error) {
 	once.Do(func() {
 
