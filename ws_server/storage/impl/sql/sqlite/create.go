@@ -1,12 +1,13 @@
 package sqlite
 
 import (
-	"fmt"
+	"ilserver/utility"
 
 	"github.com/spf13/viper"
 )
 
-// returns an error without processing...
+// create
+// -----------------------------------------------------------------------
 
 func (r *Storage) createTopics() error {
 	tq :=
@@ -17,7 +18,11 @@ func (r *Storage) createTopics() error {
 			"); "
 
 	_, err := r.db.Exec(tq)
-	return err
+	if err != nil {
+		return utility.CreateCustomError(
+			r.createTopics, err)
+	}
+	return nil
 }
 
 func (r *Storage) createAdmins() error {
@@ -29,15 +34,21 @@ func (r *Storage) createAdmins() error {
 			"); "
 
 	_, err := r.db.Exec(tq)
-	return err
+	if err != nil {
+		return utility.CreateCustomError(
+			r.createAdmins, err)
+	}
+	return nil
 }
 
+// inflate
 // -----------------------------------------------------------------------
 
 func (r *Storage) inflateAdminsIfNeeded() error {
 	err, num := instance.RecordCountInTable("Admins")
 	if err != nil {
-		return fmt.Errorf("")
+		return utility.CreateCustomError(
+			r.inflateAdminsIfNeeded, err)
 	}
 
 	// ***
@@ -45,7 +56,8 @@ func (r *Storage) inflateAdminsIfNeeded() error {
 	if num == 0 {
 		err = instance.inflateAdmins()
 		if err != nil {
-			return err
+			return utility.CreateCustomError(
+				r.inflateAdminsIfNeeded, err)
 		}
 	}
 
@@ -58,12 +70,18 @@ func (r *Storage) inflateAdmins() error {
 			"VALUES (?, ?);")
 
 	if err != nil {
-		return err
+		return utility.CreateCustomError(
+			r.inflateAdmins, err)
 	}
 
 	login := viper.GetString("storage.default_admin_entry.login")
-	pass := viper.GetString("database.default_admin_entry.pass")
+	pass := viper.GetString("storage.default_admin_entry.pass")
 
 	_, err = stmt.Exec(login, pass)
-	return err
+	if err != nil {
+		return utility.CreateCustomError(
+			r.inflateAdmins, err)
+	}
+
+	return nil
 }

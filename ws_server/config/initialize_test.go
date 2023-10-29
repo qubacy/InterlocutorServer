@@ -22,9 +22,9 @@ func TestParametersAvailability(t *testing.T) {
 	setUp()
 
 	dbFileName := viper.GetString("storage.sql.sqlite.file")
+	fmt.Println("database file name:", dbFileName)
+
 	if len(dbFileName) == 0 {
 		t.Fail()
 	}
-
-	fmt.Println("database file name:", dbFileName)
 }

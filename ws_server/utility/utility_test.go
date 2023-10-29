@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -30,6 +31,7 @@ func TestGetFunctionName(t *testing.T) {
 		actual := GetFunctionName(testCases[i].param)
 		if actual != testCases[i].want {
 			t.Fail()
+			return
 		}
 	}
 }
@@ -54,6 +56,35 @@ func TestIsFunction(t *testing.T) {
 		actual := IsFunction(testCases[i].param)
 		if actual != testCases[i].want {
 			t.Fail()
+			return
+		}
+	}
+}
+
+func Test_CreateCustomError(t *testing.T) {
+	err := CreateCustomError(GetFunctionName, fmt.Errorf("<some library error>"))
+	err = CreateCustomError(GetFunctionName, err)
+	err = CreateCustomError(strconv.Atoi, err)
+	err = CreateCustomError(IsFunction, err)
+	//...
+	fmt.Println(err.Error())
+}
+
+// benchmarks
+// -----------------------------------------------------------------------
+
+func BenchmarkGetFunctionName(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		if x := GetFunctionName(strings.Contains); x != "strings.Contains" {
+			b.Fatalf("Unexpected result: %v", x)
+		}
+	}
+}
+
+func BenchmarkIsFunction(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		if x := IsFunction(strings.Contains); x != true {
+			b.Fatalf("Unexpected result: %v", x)
 		}
 	}
 }
@@ -83,12 +114,15 @@ func TestSplit(t *testing.T) {
 
 		if len(actual) != len(testCases[i].want) {
 			t.Fail()
+			return
 		}
 		if reflect.TypeOf(actual) != reflect.TypeOf(testCases[i].want) {
 			t.Fail()
+			return
 		}
 		if !reflect.DeepEqual(actual, testCases[i].want) {
 			t.Fail()
+			return
 		}
 	}
 }
@@ -104,6 +138,7 @@ func TestFunctionType(t *testing.T) {
 
 	if !strings.Contains(funType.String(), "func") {
 		t.Fail()
+		return
 	}
 }
 
@@ -111,6 +146,7 @@ func TestFuncName(t *testing.T) {
 	pc, file, line, ok := runtime.Caller(0)
 	if !ok {
 		t.Fail()
+		return
 	}
 
 	fmt.Printf("pc: %v\n", pc)
@@ -120,6 +156,7 @@ func TestFuncName(t *testing.T) {
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {
 		t.Fail()
+		return
 	}
 
 	fmt.Println()
@@ -130,6 +167,7 @@ func TestFuncName(t *testing.T) {
 
 	if shortFuncName != "TestFuncName" {
 		t.Fail()
+		return
 	}
 }
 
@@ -145,6 +183,7 @@ func TestFuncNameV1(t *testing.T) {
 
 	if shortFuncName != "TestFuncNameV1" {
 		t.Fail()
+		return
 	}
 }
 
@@ -157,25 +196,31 @@ func TestWrapError(t *testing.T) {
 
 	if err.Error() != "2 1 0" {
 		t.Fail()
+		return
 	}
 	err = errors.Unwrap(err)
 	if err.Error() != "1 0" {
 		t.Fail()
+		return
 	}
 	err = errors.Unwrap(err)
 	if err.Error() != "0" {
 		t.Fail()
+		return
 	}
 	err = errors.Unwrap(err)
 	if err != nil {
 		t.Fail()
+		return
 	}
 }
 
 func TestExecutable(t *testing.T) {
 	path, err := os.Executable()
 	if err != nil {
+		fmt.Println("err:", err.Error())
 		t.Fail()
+		return
 	}
 
 	fmt.Printf("path: %v\n", path)
@@ -184,7 +229,9 @@ func TestExecutable(t *testing.T) {
 func TestGetwd(t *testing.T) {
 	path, err := os.Getwd()
 	if err != nil {
+		fmt.Println("err:", err.Error())
 		t.Fail()
+		return
 	}
 
 	fmt.Printf("path: %v\n", path)
