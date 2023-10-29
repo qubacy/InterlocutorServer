@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var databaseDirectory = "../storage/" //
+var databaseDirectory = "../storage/" // ?
 
 func PathToDatabaseFile() string {
 	return databaseDirectory +

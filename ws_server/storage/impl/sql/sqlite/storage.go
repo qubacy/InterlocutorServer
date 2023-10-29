@@ -31,7 +31,7 @@ func Instance() (*Storage, error) {
 
 		duration := viper.GetDuration("storage.sql.initialization_timeout")
 		ctx, cancel := context.WithTimeout(context.Background(), duration)
-		defer cancel()
+		defer cancel() // ?
 
 		initializationError =
 			initialize(ctx)
