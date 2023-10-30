@@ -1,1 +1,1 @@
-# <div style="text-align: center;">Control Packet Format 🤖</div>
+# Control Packet Format 🤖

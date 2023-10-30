@@ -1,4 +1,4 @@
-# <div style="text-align: center;">Packet Format Over WS 🗑</div>
+# Packet Format Over WS 🗑
 
 ## Inside the server
 
@@ -20,7 +20,7 @@ enum class operation : int {
 }
 ```
 
-## <div style="text-align: center;">SEARCHING</div>
+## SEARCHING
 ## OPS: `Searching start`, `Searching game found`, `Chatting new message`
 
 ### Request
@@ -96,7 +96,7 @@ enum class operation : int {
 > Until information about the found game comes.
 > Or just gracefully close the websocket.
 
-## <div style="text-align: center;">CHATTING</div>
+## CHATTING
 ## OPS: `Chatting new message`, `Chatting stage is over`
 
 ### Request
@@ -139,7 +139,7 @@ enum class operation : int {
 }
 ```
 
-## <div style="text-align: center;">CHOOSING</div>
+## CHOOSING
 ## OPS: `Choosing users chosen`
 
 ### Request

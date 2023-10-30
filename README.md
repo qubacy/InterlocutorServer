@@ -3,7 +3,7 @@
 ## API:
 ### Over websocket
 - Description [here](./ws_server/about/proto/ws/desc.md)
-- Examples [here](./ws_server/about/proto/ws/desc.md)
+- Examples [here](./ws_server/about/proto/ws/examples.md)
 
 ### Control
 - Description [here](./ws_server/about/proto/http/control/desc.md)
