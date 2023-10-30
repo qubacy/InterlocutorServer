@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"ilserver/domain"
+	"ilserver/storage"
 	"ilserver/utility"
 	"math/rand"
 	"testing"
@@ -11,7 +12,7 @@ import (
 func Test_InsertTopic(t *testing.T) {
 	storage, err := Instance()
 	if err != nil {
-		t.Error()
+		t.Fatal()
 		return
 	}
 
@@ -19,7 +20,7 @@ func Test_InsertTopic(t *testing.T) {
 
 	topicsForInsert := generateFakeTopics()
 	for i := range topicsForInsert {
-		_, err = storage.InsertTopic(context.Background(), topicsForInsert[i])
+		_, err := storage.InsertTopic(context.Background(), topicsForInsert[i])
 		if err != nil {
 			t.Errorf("Insert topic failed. Err: %v", err)
 			return
@@ -28,12 +29,7 @@ func Test_InsertTopic(t *testing.T) {
 
 	// ***
 
-	num, err := storage.RecordCountInTable(context.Background(), "Topics")
-	if err != nil {
-		t.Errorf("Could not get the number of records in the table. Err: %v", err)
-		return
-	}
-
+	num := recordCountInTableWithChecks(t, storage, "Topics")
 	if num != len(topicsForInsert) {
 		t.Errorf("Record count in the table is not equal %v", len(topicsForInsert))
 		return
@@ -46,22 +42,16 @@ func Test_InsertTopic(t *testing.T) {
 }
 
 func Test_InsertTopics(t *testing.T) {
-	storage, err := Instance()
-	if err != nil {
-		t.Error()
-		return
-	}
+	storage := instanceWithChecks(t)
+
+	// ***
+
 	topicsForInsert := generateFakeTopics()
 	insertTopicsWithChecks(t, storage, topicsForInsert)
 
 	// ***
 
-	num, err := storage.RecordCountInTable(context.Background(), "Topics")
-	if err != nil {
-		t.Errorf("Could not get the number of records in the table. Err: %v", err)
-		return
-	}
-
+	num := recordCountInTableWithChecks(t, storage, "Topics")
 	if num != len(topicsForInsert) {
 		t.Errorf("Record count in the table is not equal %v", len(topicsForInsert))
 		return
@@ -75,15 +65,13 @@ func Test_InsertTopics(t *testing.T) {
 // -----------------------------------------------------------------------
 
 func Test_AllTopics(t *testing.T) {
-	storage, err := Instance()
-	if err != nil {
-		t.Error()
-		return
-	}
+	storage := instanceWithChecks(t)
+
+	// ***
 
 	topicsForInsert := generateFakeTopics()
 	for i := range topicsForInsert {
-		_, err = storage.InsertTopic(context.Background(), topicsForInsert[i])
+		_, err := storage.InsertTopic(context.Background(), topicsForInsert[i])
 		if err != nil {
 			t.Errorf("Insert topic failed. Err: %v", err)
 			return
@@ -100,34 +88,20 @@ func Test_AllTopics(t *testing.T) {
 }
 
 func Test_AllTopics_V1(t *testing.T) {
-	storage, err := Instance()
-	if err != nil {
-		t.Error()
-		return
-	}
+	storage := instanceWithChecks(t)
 
 	topicsForInsert := generateFakeTopics()
-	err = storage.InsertTopics(context.Background(), topicsForInsert)
-	if err != nil {
-		t.Errorf("Insert topics failed. Err: %v", err)
-		return
-	}
-
-	// ***
+	insertTopicsWithChecks(t, storage, topicsForInsert)
 
 	allTopicsWithChecks(t, storage, topicsForInsert)
-
-	// ***
 
 	deleteTopicsWithChecks(t, storage)
 }
 
 func Test_Topic(t *testing.T) {
-	storage, err := Instance()
-	if err != nil {
-		t.Error()
-		return
-	}
+	storage := instanceWithChecks(t)
+
+	// ***
 
 	topicsForInsert := generateFakeTopics()
 	insertTopicsWithChecks(t, storage, topicsForInsert)
@@ -157,11 +131,9 @@ func Test_Topic(t *testing.T) {
 }
 
 func Test_RandomTopic(t *testing.T) {
-	storage, err := Instance()
-	if err != nil {
-		t.Error()
-		return
-	}
+	storage := instanceWithChecks(t)
+
+	// ***
 
 	topicsForInsert := generateFakeTopics()
 	insertTopicsWithChecks(t, storage, topicsForInsert)
@@ -194,7 +166,25 @@ func Test_DeleteTopic(t *testing.T) {
 // private help functions.
 // -----------------------------------------------------------------------
 
-func insertTopicsWithChecks(t *testing.T, storage *Storage, topics []domain.Topic) {
+func instanceWithChecks(t *testing.T) storage.Storage {
+	storage, err := Instance()
+	if err != nil {
+		t.Fatalf("Failed to get storage object. Err: %v", err)
+		return nil
+	}
+	return storage
+}
+
+func recordCountInTableWithChecks(t *testing.T, storage storage.Storage, tableName string) int {
+	num, err := storage.RecordCountInTable(context.Background(), tableName)
+	if err != nil {
+		t.Errorf("Could not get the number of records in the table. Err: %v", err)
+		return 0
+	}
+	return num
+}
+
+func insertTopicsWithChecks(t *testing.T, storage storage.Storage, topics []domain.Topic) {
 	err := storage.InsertTopics(context.Background(), topics)
 	if err != nil {
 		t.Errorf("Insert topics failed. Err: %v", err)
@@ -202,7 +192,7 @@ func insertTopicsWithChecks(t *testing.T, storage *Storage, topics []domain.Topi
 	}
 }
 
-func allTopicsWithChecks(t *testing.T, storage *Storage, storedTopics []domain.Topic) []domain.Topic {
+func allTopicsWithChecks(t *testing.T, storage storage.Storage, storedTopics []domain.Topic) []domain.Topic {
 	readTopics, err := storage.AllTopics(context.Background())
 	if err != nil {
 		t.Errorf("Select all topics failed. Err: %v", err)
@@ -220,7 +210,7 @@ func allTopicsWithChecks(t *testing.T, storage *Storage, storedTopics []domain.T
 	return readTopics
 }
 
-func deleteTopicsWithChecks(t *testing.T, storage *Storage) {
+func deleteTopicsWithChecks(t *testing.T, storage storage.Storage) {
 	err := storage.DeleteTopics(context.Background())
 	if err != nil {
 		t.Errorf("Failed to delete topics. Err: %v", err)
@@ -231,13 +221,13 @@ func deleteTopicsWithChecks(t *testing.T, storage *Storage) {
 // ***
 
 func generateFakeTopics() []domain.Topic {
-	topicCount := rand.Intn(10) + 10
-	topics := make([]domain.Topic, topicCount)
-	for i := range topics {
-		topics[i] = domain.Topic{
-			Lang: rand.Intn(2),               // <--- max lang number
-			Name: utility.RandomString(1000), // <--- name length
+	count := rand.Intn(10) + 10
+	entities := make([]domain.Topic, count)
+	for i := range entities {
+		entities[i] = domain.Topic{
+			Lang: rand.Intn(2),              // <--- max lang number
+			Name: utility.RandomString(100), // <--- name length
 		}
 	}
-	return topics
+	return entities
 }

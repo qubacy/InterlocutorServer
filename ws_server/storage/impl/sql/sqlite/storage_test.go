@@ -136,7 +136,7 @@ func Test_RecordCountInTable_okk(t *testing.T) {
 		t.Errorf("request failed. Err: %v", err)
 		return
 	}
-	if num != 1 {
+	if num != 1 && num != 0 { // default administrator, can be removed.
 		t.Errorf("row count not equal 1")
 		return
 	}

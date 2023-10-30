@@ -19,7 +19,7 @@ func (self *Storage) InsertTopic(ctx context.Context, topic domain.Topic) (int64
 	// ***
 
 	stmt, err := self.db.PrepareContext(ctx,
-		"INSERT INTO [Topics] (Lang, Name) "+
+		"INSERT INTO Topics (Lang, Name) "+
 			"VALUES (?, ?);",
 	)
 	if err != nil {
@@ -40,7 +40,6 @@ func (self *Storage) InsertTopic(ctx context.Context, topic domain.Topic) (int64
 	if err != nil {
 		return 0, utility.CreateCustomError(self.InsertTopic, err)
 	}
-
 	return lastInsertedId, nil
 }
 
@@ -63,7 +62,7 @@ func (self *Storage) InsertTopics(ctx context.Context, topics []domain.Topic) er
 
 	_, err := self.db.ExecContext(ctx, tq)
 	if err != nil {
-		return utility.CreateCustomError(self.AllTopics, err)
+		return utility.CreateCustomError(self.InsertTopics, err)
 	}
 
 	// ***
@@ -180,7 +179,7 @@ func (self *Storage) DeleteTopic(ctx context.Context, idr int) error {
 			"WHERE Idr = ?;",
 	)
 	if err != nil {
-		return utility.CreateCustomError(self.DeleteTopics, err)
+		return utility.CreateCustomError(self.DeleteTopic, err)
 	}
 	defer stmt.Close()
 
@@ -188,7 +187,7 @@ func (self *Storage) DeleteTopic(ctx context.Context, idr int) error {
 
 	_, err = stmt.ExecContext(ctx, idr)
 	if err != nil {
-		return utility.CreateCustomError(self.DeleteTopics, err)
+		return utility.CreateCustomError(self.DeleteTopic, err)
 	}
 	return nil
 }
