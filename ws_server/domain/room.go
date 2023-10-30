@@ -31,7 +31,6 @@ type ChoosingStateRoom struct {
 
 // -----------------------------------------------------------------------
 
-// TODO: можно ли заменить на структуру?
 type Room struct {
 	State        interface{}
 	CreationTime time.Time
