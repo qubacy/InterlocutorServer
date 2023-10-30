@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestGetFunctionName(t *testing.T) {
+func Test_GetFunctionName(t *testing.T) {
 	testCases := []struct {
 		param interface{}
 		want  string
@@ -36,7 +36,7 @@ func TestGetFunctionName(t *testing.T) {
 	}
 }
 
-func TestIsFunction(t *testing.T) {
+func Test_IsFunction(t *testing.T) {
 	testCases := []struct {
 		param interface{}
 		want  bool
@@ -70,10 +70,29 @@ func Test_CreateCustomError(t *testing.T) {
 	fmt.Println(err.Error())
 }
 
+func Test_RandomString(t *testing.T) {
+	wantLength := 10
+	if gotLength := len(RandomString(wantLength)); gotLength != wantLength {
+		t.Errorf("Unexpected str len: %v", gotLength)
+	}
+
+	wantLength = 25
+	if gotLength := len(RandomString(wantLength)); gotLength != wantLength {
+		t.Errorf("Unexpected str len: %v", gotLength)
+	}
+
+	// ***
+
+	fmt.Println(RandomString(10))
+	fmt.Println(RandomString(10))
+	fmt.Println(RandomString(10))
+	//...
+}
+
 // benchmarks
 // -----------------------------------------------------------------------
 
-func BenchmarkGetFunctionName(b *testing.B) {
+func Benchmark_GetFunctionName(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		if x := GetFunctionName(strings.Contains); x != "strings.Contains" {
 			b.Fatalf("Unexpected result: %v", x)
@@ -81,7 +100,7 @@ func BenchmarkGetFunctionName(b *testing.B) {
 	}
 }
 
-func BenchmarkIsFunction(b *testing.B) {
+func Benchmark_IsFunction(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		if x := IsFunction(strings.Contains); x != true {
 			b.Fatalf("Unexpected result: %v", x)
@@ -89,10 +108,20 @@ func BenchmarkIsFunction(b *testing.B) {
 	}
 }
 
+func Benchmark_RandomString(b *testing.B) {
+	length := 15
+	for i := 0; i < b.N; i++ {
+		str := RandomString(length)
+		if len(str) != length {
+			b.Fatalf("Unexpected str len: %v", len(str))
+		}
+	}
+}
+
 // experiments
 // -----------------------------------------------------------------------
 
-func TestSplit(t *testing.T) {
+func Test_Split(t *testing.T) {
 	testCases := []struct {
 		param string
 		sep   string
@@ -127,7 +156,7 @@ func TestSplit(t *testing.T) {
 	}
 }
 
-func TestFunctionType(t *testing.T) {
+func Test_FunctionType(t *testing.T) {
 	var fun interface{} = GetFunctionName
 
 	funType := reflect.TypeOf(fun)
@@ -142,7 +171,7 @@ func TestFunctionType(t *testing.T) {
 	}
 }
 
-func TestFuncName(t *testing.T) {
+func Test_FuncName(t *testing.T) {
 	pc, file, line, ok := runtime.Caller(0)
 	if !ok {
 		t.Fail()
@@ -165,29 +194,29 @@ func TestFuncName(t *testing.T) {
 	shortFuncName := strings.Split(fn.Name(), ".")[1]
 	fmt.Printf("short function name: %v\n", shortFuncName)
 
-	if shortFuncName != "TestFuncName" {
+	if shortFuncName != "Test_FuncName" {
 		t.Fail()
 		return
 	}
 }
 
-func TestFuncNameV1(t *testing.T) {
+func Test_FuncNameV1(t *testing.T) {
 	functionName := runtime.FuncForPC(
 		reflect.ValueOf(
-			TestFuncNameV1).Pointer()).Name()
+			Test_FuncNameV1).Pointer()).Name()
 
 	fmt.Println("function name:", functionName)
 
 	shortFuncName := strings.Split(functionName, ".")[1]
 	fmt.Printf("short function name: %v\n", shortFuncName)
 
-	if shortFuncName != "TestFuncNameV1" {
+	if shortFuncName != "Test_FuncNameV1" {
 		t.Fail()
 		return
 	}
 }
 
-func TestWrapError(t *testing.T) {
+func Test_WrapError(t *testing.T) {
 	err := errors.New("0")
 	err = fmt.Errorf("1 %w", err)
 	err = fmt.Errorf("2 %w", err)
@@ -215,7 +244,7 @@ func TestWrapError(t *testing.T) {
 	}
 }
 
-func TestExecutable(t *testing.T) {
+func Test_Executable(t *testing.T) {
 	path, err := os.Executable()
 	if err != nil {
 		fmt.Println("err:", err.Error())
@@ -226,7 +255,7 @@ func TestExecutable(t *testing.T) {
 	fmt.Printf("path: %v\n", path)
 }
 
-func TestGetwd(t *testing.T) {
+func Test_Getwd(t *testing.T) {
 	path, err := os.Getwd()
 	if err != nil {
 		fmt.Println("err:", err.Error())

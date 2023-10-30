@@ -26,6 +26,7 @@ type Storage interface {
 	Topic(ctx context.Context, idr int) (domain.Topic, error)
 	RandomTopic(ctx context.Context, lang int) (domain.Topic, error)
 	DeleteTopic(ctx context.Context, idr int) error
+	DeleteTopics(ctx context.Context) error
 
 	//...
 }

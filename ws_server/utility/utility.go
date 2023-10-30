@@ -2,6 +2,7 @@ package utility
 
 import (
 	"fmt"
+	"math/rand"
 	"reflect"
 	"runtime"
 	"strings"
@@ -33,4 +34,14 @@ func GetFunctionName(i interface{}) string {
 
 func CreateCustomError(i interface{}, err error) error {
 	return fmt.Errorf(GetFunctionName(i)+"\n with an error/in: %w", err)
+}
+
+func RandomString(n int) string {
+	chars := []rune("abcdefghijklmnopqrstuvwxyz0123456789")
+	result := make([]rune, n)
+	for i := range result {
+		randIndex := rand.Intn(len(chars))
+		result[i] = chars[randIndex]
+	}
+	return string(result)
 }

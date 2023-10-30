@@ -170,7 +170,47 @@ func (self *Storage) RandomTopic(ctx context.Context, lang int) (domain.Topic, e
 }
 
 func (self *Storage) DeleteTopic(ctx context.Context, idr int) error {
-	// TODO:
+	self.mx.Lock()
+	defer self.mx.Unlock()
+
+	// ***
+
+	stmt, err := self.db.PrepareContext(ctx,
+		"DELETE FROM Topics "+
+			"WHERE Idr = ?;",
+	)
+	if err != nil {
+		return utility.CreateCustomError(self.DeleteTopics, err)
+	}
+	defer stmt.Close()
+
+	// ***
+
+	_, err = stmt.ExecContext(ctx, idr)
+	if err != nil {
+		return utility.CreateCustomError(self.DeleteTopics, err)
+	}
+	return nil
+}
+
+func (self *Storage) DeleteTopics(ctx context.Context) error {
+	self.mx.Lock()
+	defer self.mx.Unlock()
+
+	// ***
+
+	stmt, err := self.db.PrepareContext(ctx, "DELETE FROM Topics;")
+	if err != nil {
+		return utility.CreateCustomError(self.DeleteTopics, err)
+	}
+	defer stmt.Close()
+
+	// ***
+
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		return utility.CreateCustomError(self.DeleteTopics, err)
+	}
 	return nil
 }
 
