@@ -3,7 +3,6 @@ package control
 import (
 	"encoding/json"
 	"ilserver/service/control"
-	"ilserver/transport/controlDto"
 	"io"
 	"net/http"
 )

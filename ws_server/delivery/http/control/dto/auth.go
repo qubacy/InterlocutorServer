@@ -1,8 +1,8 @@
-package controlDto
+package dto
 
 type SignInReq struct {
-	Login string
-	Pass  string
+	Login string `json:"login"`
+	Pass  string `json:"pass"`
 }
 
 type SignInRes struct {

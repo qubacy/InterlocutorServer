@@ -1,4 +1,4 @@
-package controlDto
+package dto
 
 type UntypedTopicParts []interface{}
 

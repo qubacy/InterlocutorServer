@@ -2,24 +2,25 @@ package control
 
 import (
 	"ilserver/repository"
+	"ilserver/storage"
 	"ilserver/transport/control/middleware"
 	"ilserver/transport/controlDto"
 )
 
 type AuthService struct {
-	dbFacade *repository.DbFacade
+	storage storage.Storage
 }
 
 func NewAuthService() *AuthService {
 	return &AuthService{
-		dbFacade: repository.Instance(),
+		storage: repository.Instance(),
 	}
 }
 
 // -----------------------------------------------------------------------
 
-func (as *AuthService) SignIn(req controlDto.SignInReq) (error, controlDto.SignInRes) {
-	err, has := as.dbFacade.HasAdminWithLoginAndPass(req.Login, req.Pass)
+func (self *AuthService) SignIn(req controlDto.SignInReq) (error, controlDto.SignInRes) {
+	err, has := self.storage.HasAdminWithLoginAndPass(req.Login, req.Pass)
 	if err != nil {
 		return err, controlDto.SignInRes{}
 	}
