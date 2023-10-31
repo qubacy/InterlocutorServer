@@ -1,4 +1,4 @@
-# Packet Examples
+# WebSocket - App
 
 ### Request
 #### `Searching start`

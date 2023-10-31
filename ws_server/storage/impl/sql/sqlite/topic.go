@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"ilserver/domain"
-	"ilserver/utility"
+	"ilserver/pkg/utility"
 	"strconv"
 )
 

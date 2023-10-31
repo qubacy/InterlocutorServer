@@ -3,11 +3,11 @@ package impl
 import (
 	"context"
 	"ilserver/pkg/token"
+	"ilserver/pkg/utility"
 	"ilserver/service/control"
 	"ilserver/service/control/dto"
 
 	"ilserver/storage"
-	"ilserver/utility"
 )
 
 type Auth struct {

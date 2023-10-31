@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"ilserver/utility"
+	"ilserver/pkg/utility"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"

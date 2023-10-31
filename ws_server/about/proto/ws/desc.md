@@ -1,4 +1,4 @@
-# Packet Format Over WS 🗑
+# WebSocket - App 🗑
 
 ## Inside the server
 

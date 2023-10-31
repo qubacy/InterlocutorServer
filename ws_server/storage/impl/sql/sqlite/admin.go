@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"ilserver/domain"
-	"ilserver/utility"
+	"ilserver/pkg/utility"
 )
 
 func (self *Storage) InsertAdmin(ctx context.Context, admin domain.Admin) (int64, error) {

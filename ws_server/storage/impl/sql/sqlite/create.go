@@ -2,7 +2,7 @@ package sqlite
 
 import (
 	"context"
-	"ilserver/utility"
+	"ilserver/pkg/utility"
 
 	"github.com/spf13/viper"
 )

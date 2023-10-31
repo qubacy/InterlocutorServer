@@ -1,6 +1,6 @@
 # InterlocutorServer 🤟
 
-## API:
+## API
 ### WebSocket
 - App
   - Description [here](./ws_server/about/proto/ws/desc.md)
@@ -14,5 +14,5 @@
 - Debug
   - Very simple handlers.
 
-## Useful links:
+## Useful links
 - Golang SQLite Simple Example // John Pili / URL: https://www.codeproject.com/Articles/5261771/Golang-SQLite-Simple-Example

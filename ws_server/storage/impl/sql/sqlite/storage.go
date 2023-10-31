@@ -3,7 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"ilserver/utility"
+	"ilserver/pkg/utility"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"

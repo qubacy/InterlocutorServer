@@ -1,6 +1,6 @@
 port: "47777"
 
-# main logic
+# main logic (app)
 # -----------------------------------------------
 
 update_rooms:
@@ -20,9 +20,11 @@ background:
 
 # -----------------------------------------------
 
+# TODO: add timeout process request
 control_server:
-  token_duration: 5m
-  # TODO: add timeout process request
+  token:
+    duration: 5m
+    secret: "your_secret"
 
 debug_server:
   launch: true

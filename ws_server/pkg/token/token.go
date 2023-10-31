@@ -3,6 +3,7 @@ package token
 import (
 	"encoding/json"
 	"fmt"
+	"ilserver/pkg/utility"
 	"time"
 
 	"github.com/cristalhq/jwt/v5"
@@ -10,11 +11,15 @@ import (
 )
 
 func NewToken(login string) (error, string) {
-	key := []byte(`secret`)
+	key := []byte(viper.GetString("control_server.token.secret"))
 	signer, err := jwt.NewSignerHS(jwt.HS256, key)
 	if err != nil {
-		return err, ""
+		return utility.CreateCustomError(NewToken, err), ""
 	}
+
+	// ***
+
+	// TODO:
 
 	// create claims
 	claims := &jwt.RegisteredClaims{
@@ -22,7 +27,7 @@ func NewToken(login string) (error, string) {
 		ExpiresAt: jwt.NewNumericDate(
 			time.Now().Add(
 				viper.GetDuration(
-					"control_server.token_duration"))),
+					"control_server.token.duration"))),
 	}
 
 	// create a Builder
