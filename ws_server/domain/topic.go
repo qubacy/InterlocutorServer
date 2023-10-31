@@ -17,40 +17,36 @@ type TopicList []Topic
 // functions/methods
 // -----------------------------------------------------------------------
 
-func Contains(topics []Topic, one Topic) bool {
-	if topics == nil {
+func (s Topic) Eq(other Topic) bool {
+	return s.Lang == other.Lang &&
+		s.Name == other.Name
+}
+
+func (s TopicList) Contains(other Topic) bool {
+	if s == nil {
 		return false
 	}
 
-	for i := range topics {
-		if topics[i].Eq(one) {
+	for i := range s {
+		if s[i].Eq(other) {
 			return true
 		}
 	}
 	return false
 }
 
-func IsEqual(lhs, rhs Topic) bool {
-	return lhs.Lang == rhs.Lang &&
-		lhs.Name == rhs.Name
-}
-
-func (self Topic) Eq(other Topic) bool {
-	return IsEqual(self, other)
-}
-
-func IsSomeEqual(lhs, rhs []Topic) bool {
-	if lhs == nil || rhs == nil {
+func (s TopicList) Eq(other TopicList) bool {
+	if s == nil || other == nil {
 		return false
 	}
-	if len(lhs) != len(rhs) {
+	if len(s) != len(other) {
 		return false
 	}
 
 	// ***
 
-	for i := range lhs {
-		if !Contains(rhs, lhs[i]) {
+	for i := range other {
+		if !s.Contains(other[i]) {
 			return false
 		}
 	}

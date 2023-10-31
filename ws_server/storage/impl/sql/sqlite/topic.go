@@ -43,7 +43,7 @@ func (self *Storage) InsertTopic(ctx context.Context, topic domain.Topic) (int64
 	return lastInsertedId, nil
 }
 
-func (self *Storage) InsertTopics(ctx context.Context, topics []domain.Topic) error {
+func (self *Storage) InsertTopics(ctx context.Context, topics domain.TopicList) error {
 	if len(topics) == 0 {
 		return nil
 	}
@@ -73,7 +73,7 @@ func (self *Storage) InsertTopics(ctx context.Context, topics []domain.Topic) er
 // select
 // -----------------------------------------------------------------------
 
-func (self *Storage) AllTopics(ctx context.Context) ([]domain.Topic, error) {
+func (self *Storage) AllTopics(ctx context.Context) (domain.TopicList, error) {
 	self.mx.Lock()
 	defer self.mx.Unlock()
 
@@ -230,8 +230,8 @@ func sqlRowsToTopic(rows *sql.Rows) (domain.Topic, error) {
 	return result, nil
 }
 
-func sqlRowsToTopics(rows *sql.Rows) ([]domain.Topic, error) {
-	topics := []domain.Topic{}
+func sqlRowsToTopics(rows *sql.Rows) (domain.TopicList, error) {
+	topics := domain.TopicList{}
 	for rows.Next() {
 		one := domain.Topic{}
 
@@ -243,7 +243,7 @@ func sqlRowsToTopics(rows *sql.Rows) ([]domain.Topic, error) {
 	return topics, nil
 }
 
-func topicsToSqlInsertValues(topics []domain.Topic) string {
+func topicsToSqlInsertValues(topics domain.TopicList) string {
 	result := ""
 	for i := range topics {
 		result += "("

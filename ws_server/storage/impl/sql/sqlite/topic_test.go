@@ -120,7 +120,7 @@ func Test_Topic(t *testing.T) {
 		return
 	}
 
-	if !domain.Contains(topicsForInsert, randomTopic) {
+	if !topicsForInsert.Contains(randomTopic) {
 		t.Errorf("Topic not found in saved topics")
 		return
 	}
@@ -146,7 +146,7 @@ func Test_RandomTopic(t *testing.T) {
 		return
 	}
 
-	if !domain.Contains(topicsForInsert, randomTopic) {
+	if !topicsForInsert.Contains(randomTopic) {
 		t.Errorf("Topic not found in saved topics")
 		return
 	}
@@ -184,7 +184,7 @@ func recordCountInTableWithChecks(t *testing.T, storage storage.Storage, tableNa
 	return num
 }
 
-func insertTopicsWithChecks(t *testing.T, storage storage.Storage, topics []domain.Topic) {
+func insertTopicsWithChecks(t *testing.T, storage storage.Storage, topics domain.TopicList) {
 	err := storage.InsertTopics(context.Background(), topics)
 	if err != nil {
 		t.Errorf("Insert topics failed. Err: %v", err)
@@ -192,7 +192,7 @@ func insertTopicsWithChecks(t *testing.T, storage storage.Storage, topics []doma
 	}
 }
 
-func allTopicsWithChecks(t *testing.T, storage storage.Storage, storedTopics []domain.Topic) []domain.Topic {
+func allTopicsWithChecks(t *testing.T, storage storage.Storage, storedTopics domain.TopicList) domain.TopicList {
 	readTopics, err := storage.AllTopics(context.Background())
 	if err != nil {
 		t.Errorf("Select all topics failed. Err: %v", err)
@@ -202,7 +202,7 @@ func allTopicsWithChecks(t *testing.T, storage storage.Storage, storedTopics []d
 		t.Errorf("Record count in the table is not equal %v", len(storedTopics))
 		return nil
 	}
-	if !domain.IsSomeEqual(storedTopics, readTopics) {
+	if !storedTopics.Eq(readTopics) {
 		t.Errorf("Topics are not equal to each other")
 		return nil
 	}
@@ -220,9 +220,9 @@ func deleteTopicsWithChecks(t *testing.T, storage storage.Storage) {
 
 // ***
 
-func generateFakeTopics() []domain.Topic {
+func generateFakeTopics() domain.TopicList {
 	count := rand.Intn(10) + 10
-	entities := make([]domain.Topic, count)
+	entities := make(domain.TopicList, count)
 	for i := range entities {
 		entities[i] = domain.Topic{
 			Lang: rand.Intn(2),              // <--- max lang number

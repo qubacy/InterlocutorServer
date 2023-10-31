@@ -105,7 +105,7 @@ func (self *Storage) HasAdminWithLoginAndPassword(ctx context.Context, login, pa
 	return recordCount > 0, nil
 }
 
-func (self *Storage) AllAdmins(ctx context.Context) ([]domain.Admin, error) {
+func (self *Storage) AllAdmins(ctx context.Context) (domain.AdminList, error) {
 	self.mx.Lock()
 	defer self.mx.Unlock()
 

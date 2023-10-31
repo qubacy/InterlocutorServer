@@ -1,4 +1,4 @@
-package middleware
+package token
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func BuildNewToken(login string) (error, string) {
+func NewToken(login string) (error, string) {
 	key := []byte(`secret`)
 	signer, err := jwt.NewSignerHS(jwt.HS256, key)
 	if err != nil {

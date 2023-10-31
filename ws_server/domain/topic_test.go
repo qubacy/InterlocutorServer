@@ -21,7 +21,7 @@ func Test_IsEqual(t *testing.T) {
 	// ***
 
 	for i := range testCases {
-		got := IsEqual(testCases[i].lhs, testCases[i].rhs)
+		got := testCases[i].lhs.Eq(testCases[i].rhs)
 		if got != testCases[i].want {
 			t.Errorf("The left topic %v is not equal to the right topic %v",
 				testCases[i].lhs, testCases[i].rhs)

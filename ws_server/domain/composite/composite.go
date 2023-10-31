@@ -1,3 +1,3 @@
 package composite
 
-// objects obtained simultaneously from several tables.
+// NOTE: objects obtained simultaneously from several tables

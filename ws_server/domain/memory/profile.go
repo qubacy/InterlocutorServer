@@ -1,4 +1,4 @@
-package domain
+package memory
 
 type Profile struct {
 	Id       string

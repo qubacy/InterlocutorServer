@@ -67,7 +67,7 @@ func Test_AllAdmins(t *testing.T) {
 // private help functions.
 // -----------------------------------------------------------------------
 
-func insertAdminsWithChecks(t *testing.T, storage storage.Storage, admins []domain.Admin) {
+func insertAdminsWithChecks(t *testing.T, storage storage.Storage, admins domain.AdminList) {
 	for i := range admins {
 		_, err := storage.InsertAdmin(context.Background(), admins[i])
 		if err != nil {
@@ -94,9 +94,9 @@ func generateFakeAdmin(login string) domain.Admin {
 	}
 }
 
-func generateFakeAdmins() []domain.Admin {
+func generateFakeAdmins() domain.AdminList {
 	count := rand.Intn(10) + 10
-	entities := make([]domain.Admin, count)
+	entities := make(domain.AdminList, count)
 	for i := range entities {
 		entities[i] = domain.Admin{
 			Login: utility.RandomString(99) + strconv.Itoa(i),
