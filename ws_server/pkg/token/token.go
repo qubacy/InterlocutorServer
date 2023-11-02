@@ -10,34 +10,44 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewToken(login string) (error, string) {
+type Payload struct {
+	Subject string
+}
+
+type Manager interface {
+	New(Payload) (error, string)
+	Verify(string) error
+}
+
+// -----------------------------------------------------------------------
+
+func NewToken(payload Payload) (error, string) {
 	key := []byte(viper.GetString("control_server.token.secret"))
 	signer, err := jwt.NewSignerHS(jwt.HS256, key)
 	if err != nil {
 		return utility.CreateCustomError(NewToken, err), ""
 	}
 
-	// ***
-
 	claims := &jwt.RegisteredClaims{
-		Subject: login,
+		Subject: payload.Subject,
 		ExpiresAt: jwt.NewNumericDate(
-			time.Now().Add(
+			time.Now().UTC().Add(
 				viper.GetDuration(
 					"control_server.token.duration"))),
 	}
 
-	// create a Builder
 	builder := jwt.NewBuilder(signer)
-
-	// and build a Token
 	token, err := builder.Build(claims)
 	if err != nil {
-		return err, ""
+		return utility.CreateCustomError(NewToken, err), ""
 	}
-
-	// here is token as a string
 	return nil, token.String()
+}
+
+// -----------------------------------------------------------------------
+
+func VerifyToken(token string) {
+
 }
 
 func ParseAndVerifyToken(token string) (error, bool, string) {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -47,6 +48,12 @@ func setUpViper() error {
 	if len(viper.GetString(key)) == 0 {
 		return fmt.Errorf("Value by key '%v' is empty", key)
 	}
+
+	key = "control_server.token.duration"
+	viper.Set(key, 5*time.Minute)
+	if len(viper.GetString(key)) == 0 {
+		return fmt.Errorf("Value by key '%v' is empty", key)
+	}
 	return nil
 }
 
@@ -68,6 +75,20 @@ func Test_NewToken(t *testing.T) {
 
 	// ***
 
+	encoding := base64.StdEncoding.WithPadding(base64.NoPadding) // ?
+	header, err := encoding.DecodeString(tokenParts[0])
+	if err != nil {
+		t.Errorf("Decode header failed. Err: %v", err)
+	}
+	fmt.Println(string(header))
+
+	// ***
+
+	payload, err := encoding.DecodeString(tokenParts[1])
+	if err != nil {
+		t.Errorf("Decode payload failed. Err: %v", err)
+	}
+	fmt.Println(string(payload))
 }
 
 // experiments
@@ -89,7 +110,7 @@ func Test_base64_StdEncoding_EncodeToString_v1(t *testing.T) {
 	}
 }
 
-// ***
+// -----------------------------------------------------------------------
 
 func Test_base64_StdEncoding_DecodeString(t *testing.T) {
 	str := "YmFzZTY0LlN0ZEVuY29kaW5nLkRlY29kZVN0cmluZw=="
@@ -119,17 +140,18 @@ func Test_base64_StdEncoding_DecodeString_v1(t *testing.T) {
 	}
 }
 
-// ***
+// -----------------------------------------------------------------------
 
 func Test_base64_NewEncoder(t *testing.T) {
 	buffer := bytes.NewBufferString("")
 	encoding := base64.StdEncoding.WithPadding(base64.StdPadding)
 	encoder := base64.NewEncoder(encoding, buffer)
-	defer encoder.Close()
 
 	// ***
 
-	n, err := encoder.Write([]byte("deja vu")) // TODO: does not work!?
+	n, err := encoder.Write([]byte("deja vu"))
+	encoder.Close()
+
 	fmt.Printf("%v bytes written to buffer\n", n)
 	if err != nil {
 		t.Errorf("Is there something wrong. Err: %v", err)
@@ -141,12 +163,29 @@ func Test_base64_NewEncoder(t *testing.T) {
 	// *** only view content ***
 
 	fmt.Println("Buffer string:", buffer.String())
-	fmt.Println("Buffer bytes:", string(buffer.Bytes()))
-
 	fmt.Println("Cap buffer:", buffer.Cap())
 	fmt.Println("Len buffer:", buffer.Len())
 
-	if string(buffer.Bytes()) == "ZGVqYSB2dQ==" { // !=
+	if string(buffer.Bytes()) != "ZGVqYSB2dQ==" {
+		t.Errorf("Is there something wrong")
+	}
+}
+
+func Test_base64_NewEncoder_v1(t *testing.T) {
+	buffer := bytes.NewBufferString("")
+	encoding := base64.StdEncoding.WithPadding(base64.StdPadding)
+	encoder := base64.NewEncoder(encoding, buffer)
+
+	// ***
+
+	n, err := encoder.Write([]byte("deja vu"))
+	encoder.Close()
+
+	fmt.Printf("%v bytes written to buffer\n", n)
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+	if n == 0 {
 		t.Errorf("Is there something wrong")
 	}
 
@@ -166,6 +205,22 @@ func Test_base64_NewEncoder(t *testing.T) {
 	fmt.Println("Cap buffer:", buffer.Cap())
 	fmt.Println("Len buffer:", buffer.Len())
 }
+
+func Test_base64_NewEncoder_v2(t *testing.T) {
+	buffer := bytes.NewBufferString("")
+	input := []byte("foo\x00bar")
+	encoder := base64.NewEncoder(base64.StdEncoding, buffer)
+	encoder.Write(input)
+	encoder.Close()
+
+	// ***
+
+	if "Zm9vAGJhcg==" != buffer.String() {
+		t.Error("Is there something wrong")
+	}
+}
+
+// -----------------------------------------------------------------------
 
 func Test_bytes_NewBufferString(t *testing.T) {
 	buffer := bytes.NewBufferString("")
@@ -190,4 +245,19 @@ func Test_bytes_NewBufferString(t *testing.T) {
 	if err != nil {
 		t.Errorf("Is there something wrong. Err: %v", err)
 	}
+}
+
+// -----------------------------------------------------------------------
+
+func Test_time_Now(t *testing.T) {
+	fmt.Println("Now time:", time.Now())
+
+	var unixTime int64 = time.Now().Unix()
+	fmt.Println("Now unix number:", time.Now().Unix())
+	fmt.Println("Now unix time:", time.Unix(unixTime, 0))
+
+	fmt.Println("Now unix utc:", time.Now().UTC())
+	fmt.Println("Now unix utc time:", time.Now().UTC().Unix())
+
+	//...
 }
