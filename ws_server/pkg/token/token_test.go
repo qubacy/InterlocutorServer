@@ -138,7 +138,7 @@ func Test_base64_NewEncoder(t *testing.T) {
 		t.Errorf("Is there something wrong")
 	}
 
-	// ***
+	// *** only view content ***
 
 	fmt.Println("Buffer string:", buffer.String())
 	fmt.Println("Buffer bytes:", string(buffer.Bytes()))
@@ -150,7 +150,7 @@ func Test_base64_NewEncoder(t *testing.T) {
 		t.Errorf("Is there something wrong")
 	}
 
-	// ***
+	// *** take content ***
 
 	rawBuffer := make([]byte, 512)
 	n, err = buffer.Read(rawBuffer)
