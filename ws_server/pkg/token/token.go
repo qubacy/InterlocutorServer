@@ -19,11 +19,8 @@ func NewToken(login string) (error, string) {
 
 	// ***
 
-	// TODO:
-
-	// create claims
 	claims := &jwt.RegisteredClaims{
-		Audience: []string{login},
+		Subject: login,
 		ExpiresAt: jwt.NewNumericDate(
 			time.Now().Add(
 				viper.GetDuration(
