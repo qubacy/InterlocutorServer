@@ -200,17 +200,17 @@ func Test_FuncName(t *testing.T) {
 	}
 }
 
-func Test_FuncName_V1(t *testing.T) {
+func Test_FuncName_v1(t *testing.T) {
 	functionName := runtime.FuncForPC(
 		reflect.ValueOf(
-			Test_FuncName_V1).Pointer()).Name()
+			Test_FuncName_v1).Pointer()).Name()
 
 	fmt.Println("function name:", functionName)
 
 	shortFuncName := strings.Split(functionName, ".")[1]
 	fmt.Printf("short function name: %v\n", shortFuncName)
 
-	if shortFuncName != "Test_FuncName_V1" {
+	if shortFuncName != "Test_FuncName_v1" {
 		t.Fail()
 		return
 	}

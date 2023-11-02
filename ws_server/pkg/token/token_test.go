@@ -1,6 +1,8 @@
 package token
 
 import (
+	"bytes"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"os"
@@ -71,7 +73,121 @@ func Test_NewToken(t *testing.T) {
 // experiments
 // -----------------------------------------------------------------------
 
-func Test_base64(t *testing.T) {
-	// TODO:
+func Test_base64_StdEncoding_EncodeToString(t *testing.T) {
+	result := base64.StdEncoding.EncodeToString([]byte("one 🐘 and three 🐋"))
+	_, err := fmt.Println(result)
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+}
 
+func Test_base64_StdEncoding_EncodeToString_v1(t *testing.T) {
+	result := base64.StdEncoding.EncodeToString([]byte("deja vu"))
+	_, err := fmt.Println(result)
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+}
+
+// ***
+
+func Test_base64_StdEncoding_DecodeString(t *testing.T) {
+	str := "YmFzZTY0LlN0ZEVuY29kaW5nLkRlY29kZVN0cmluZw=="
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+		return
+	}
+
+	_, err = fmt.Println(string(data))
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+}
+
+func Test_base64_StdEncoding_DecodeString_v1(t *testing.T) {
+	str := "ZGVqYSB2dQ=="
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
+
+	_, err = fmt.Println(string(data))
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+}
+
+// ***
+
+func Test_base64_NewEncoder(t *testing.T) {
+	buffer := bytes.NewBufferString("")
+	encoding := base64.StdEncoding.WithPadding(base64.StdPadding)
+	encoder := base64.NewEncoder(encoding, buffer)
+	defer encoder.Close()
+
+	// ***
+
+	n, err := encoder.Write([]byte("deja vu")) // TODO: does not work!?
+	fmt.Printf("%v bytes written to buffer\n", n)
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+	if n == 0 {
+		t.Errorf("Is there something wrong")
+	}
+
+	// ***
+
+	fmt.Println("Buffer string:", buffer.String())
+	fmt.Println("Buffer bytes:", string(buffer.Bytes()))
+
+	fmt.Println("Cap buffer:", buffer.Cap())
+	fmt.Println("Len buffer:", buffer.Len())
+
+	if string(buffer.Bytes()) == "ZGVqYSB2dQ==" { // !=
+		t.Errorf("Is there something wrong")
+	}
+
+	// ***
+
+	rawBuffer := make([]byte, 512)
+	n, err = buffer.Read(rawBuffer)
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+	fmt.Printf("%v bytes written to buffer\n", n)
+	if n == 0 {
+		t.Errorf("Is there something wrong")
+	}
+	fmt.Println("Raw buffer as string:", string(rawBuffer))
+
+	fmt.Println("Cap buffer:", buffer.Cap())
+	fmt.Println("Len buffer:", buffer.Len())
+}
+
+func Test_bytes_NewBufferString(t *testing.T) {
+	buffer := bytes.NewBufferString("")
+	_, err := fmt.Println("Cap buffer:", buffer.Cap())
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+
+	// ***
+
+	n, err := buffer.Write([]byte("12345678901234567890123456789012345"))
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
+	if n != 35 {
+		t.Errorf("Is there something wrong")
+	}
+
+	// ***
+
+	_, err = fmt.Println("Cap buffer:", buffer.Cap())
+	if err != nil {
+		t.Errorf("Is there something wrong. Err: %v", err)
+	}
 }
