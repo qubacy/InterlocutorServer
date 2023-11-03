@@ -2,9 +2,9 @@
 
 ## API
 ### WebSocket
-- App
-  - Description [here](./ws_server/about/proto/ws/desc.md)
-  - Examples [here](./ws_server/about/proto/ws/examples.md)
+- Game
+  - Description [here](./ws_server/about/proto/ws/game/desc.md)
+  - Examples [here](./ws_server/about/proto/ws/game/examples.md)
 
 ### Http
 - Control

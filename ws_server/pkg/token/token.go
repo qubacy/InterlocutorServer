@@ -3,11 +3,9 @@ package token
 import (
 	"encoding/json"
 	"fmt"
-	"ilserver/pkg/utility"
 	"time"
 
 	"github.com/cristalhq/jwt/v5"
-	"github.com/spf13/viper"
 )
 
 type Payload struct {
@@ -15,33 +13,9 @@ type Payload struct {
 }
 
 type Manager interface {
-	New(Payload) (error, string)
+	New(Payload, time.Duration) (string, error)
+	Parse(string) (Payload, error)
 	Verify(string) error
-}
-
-// -----------------------------------------------------------------------
-
-func NewToken(payload Payload) (error, string) {
-	key := []byte(viper.GetString("control_server.token.secret"))
-	signer, err := jwt.NewSignerHS(jwt.HS256, key)
-	if err != nil {
-		return utility.CreateCustomError(NewToken, err), ""
-	}
-
-	claims := &jwt.RegisteredClaims{
-		Subject: payload.Subject,
-		ExpiresAt: jwt.NewNumericDate(
-			time.Now().UTC().Add(
-				viper.GetDuration(
-					"control_server.token.duration"))),
-	}
-
-	builder := jwt.NewBuilder(signer)
-	token, err := builder.Build(claims)
-	if err != nil {
-		return utility.CreateCustomError(NewToken, err), ""
-	}
-	return nil, token.String()
 }
 
 // -----------------------------------------------------------------------

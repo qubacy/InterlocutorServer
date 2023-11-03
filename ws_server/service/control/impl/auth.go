@@ -11,12 +11,14 @@ import (
 )
 
 type Auth struct {
-	storage storage.Storage
+	storage      storage.Storage
+	tokenManager token.Manager
 }
 
-func NewAuth(storage storage.Storage) *Auth {
+func NewAuth(storage storage.Storage, tokenManager token.Manager) *Auth {
 	return &Auth{
-		storage: storage,
+		storage:      storage,
+		tokenManager: tokenManager,
 	}
 }
 

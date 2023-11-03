@@ -2,46 +2,46 @@ package dto
 
 import "ilserver/domain"
 
-/*
-
-The default concrete Go types are:
-- bool for JSON booleans;
-- float64 for JSON numbers;
-- string for JSON strings;
-- nil for JSON null.
-
-*/
-
-type TopicDto struct {
-	Idr  float64 `json:"idr"` // ---> uint64
-	Lang float64 `json:"lang"`
-	Name string  `json:"name"`
+type GetTopicsOutput struct {
+	Topics    domain.TopicList
+	ErrorText string
 }
 
-type PostTopicReq struct {
-	AccessToken string  `json:"accessToken"`
-	Lang        float64 `json:"lang"`
-	Name        string  `json:"name"`
+type GetRandomTopicOutput struct {
+	Topic     domain.Topic
+	ErrorText string
 }
 
-type PostTopicRes struct {
-	ErrorText string  `json:"errorText"`
-	Idr       float64 `json:"idr"`
-}
-
-// converter
 // -----------------------------------------------------------------------
 
-func TopicDomainToDto(topic domain.Topic) TopicDto {
-	return TopicDto{
-		Idr:  float64(topic.Idr),
-		Lang: float64(topic.Lang),
-		Name: topic.Name,
-	}
+type PostTopicInput struct {
+	AccessToken string
+	Lang        int
+	Name        string
 }
 
-func TopicDtoToDomain(topic TopicDto) domain.Topic {
-	return domain.Topic{
-		Idr: int(topic.Idr),
-	}
+type PostTopicOutput struct {
+	Idr       int
+	ErrorText string
+}
+
+// -----------------------------------------------------------------------
+
+type PostTopicsInput struct {
+	AccessToken string
+	Topics      domain.TopicList
+}
+
+type PostTopicsOutput struct {
+	ErrorText string
+}
+
+// -----------------------------------------------------------------------
+
+type DeleteTopicByIdrOutput struct {
+	ErrorText string
+}
+
+type DeleteTopicsOutput struct {
+	ErrorText string
 }
