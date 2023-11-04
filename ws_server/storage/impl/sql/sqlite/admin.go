@@ -210,6 +210,28 @@ func (self *Storage) DeleteAdminByLogin(ctx context.Context, login string) error
 	return nil
 }
 
+func (self *Storage) DeleteAdmin(ctx context.Context, idr int) error {
+	self.mx.Lock()
+	defer self.mx.Unlock()
+
+	// ***
+
+	query := "DELETE FROM Admins WHERE Idr = ?;"
+	stmt, err := self.db.PrepareContext(ctx, query)
+	if err != nil {
+		return utility.CreateCustomError(self.DeleteAdmin, err)
+	}
+	defer stmt.Close()
+
+	// ***
+
+	_, err = stmt.ExecContext(ctx, idr)
+	if err != nil {
+		return utility.CreateCustomError(self.DeleteAdmin, err)
+	}
+	return nil
+}
+
 func (self *Storage) DeleteAdmins(ctx context.Context) error {
 	self.mx.Lock()
 	defer self.mx.Unlock()

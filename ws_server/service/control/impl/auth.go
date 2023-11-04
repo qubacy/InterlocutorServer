@@ -8,6 +8,8 @@ import (
 	"ilserver/service/control/dto"
 
 	"ilserver/storage"
+
+	"github.com/spf13/viper"
 )
 
 type Auth struct {
@@ -22,6 +24,7 @@ func NewAuth(storage storage.Storage, tokenManager token.Manager) *Auth {
 	}
 }
 
+// TODO: errors as admin
 // -----------------------------------------------------------------------
 
 func (self *Auth) SignIn(ctx context.Context, reqDto dto.SignInInput) (dto.SignInOutput, error) {
@@ -47,7 +50,10 @@ func (self *Auth) SignIn(ctx context.Context, reqDto dto.SignInInput) (dto.SignI
 
 	// ***
 
-	err, tokenStr := token.NewToken(reqDto.Login)
+	tokenStr, err := self.tokenManager.New(
+		token.MakePayload(reqDto.Login),
+		viper.GetDuration("control_server.token.duration"),
+	)
 	if err != nil {
 		return dto.SignInOutput{}, utility.CreateCustomError(self.SignIn, err)
 	}
@@ -57,14 +63,14 @@ func (self *Auth) SignIn(ctx context.Context, reqDto dto.SignInInput) (dto.SignI
 	}, nil
 }
 
-// validator
+// private
 // -----------------------------------------------------------------------
 
-func isValidSignInInput(value dto.SignInInput) bool {
-	if len(value.Login) < 3 {
+func isValidSignInInput(inp dto.SignInInput) bool {
+	if len(inp.Login) < 3 {
 		return false
 	}
-	if len(value.Pass) < 3 {
+	if len(inp.Pass) < 3 {
 		return false
 	}
 	return true

@@ -4,6 +4,10 @@ import "fmt"
 
 // Mixed approach: 400 - business logic errors
 
+func ErrInputDtoIsInvalid() string {
+	return fmt.Sprintf("Input data is invalid")
+}
+
 func ErrAccessTokenIsEmpty() string {
 	return fmt.Sprintf("Access token is empty")
 }

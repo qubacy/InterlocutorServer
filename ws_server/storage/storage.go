@@ -17,6 +17,7 @@ type Storage interface {
 	AdminByLogin(ctx context.Context, login string) (domain.Admin, error)
 	UpdateAdminPasswordByLogin(ctx context.Context, login, password string) error
 	DeleteAdminByLogin(ctx context.Context, login string) error
+	DeleteAdmin(ctx context.Context, idr int) error
 	DeleteAdmins(ctx context.Context) error
 
 	// *** topic ***
