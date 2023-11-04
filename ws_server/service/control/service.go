@@ -2,7 +2,6 @@ package control
 
 import (
 	"context"
-	"ilserver/domain"
 	"ilserver/service/control/dto"
 )
 
@@ -11,7 +10,7 @@ type AuthService interface {
 }
 
 type AdminService interface {
-	GetAdmins(ctx context.Context, accessToken string) domain.AdminList
+	GetAdmins(ctx context.Context, accessToken string) (dto.GetAdminsOutput, error)
 	PostAdmin(ctx context.Context, inp dto.PostAdminInput) (dto.PostAdminOutput, error)
 	DeleteAdminByIdr(ctx context.Context, accessToken string, idr int) (dto.DeleteAdminByIdrOutput, error)
 }

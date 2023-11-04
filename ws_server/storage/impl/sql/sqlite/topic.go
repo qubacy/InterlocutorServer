@@ -3,7 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"ilserver/domain"
 	"ilserver/pkg/utility"
 	"strconv"
@@ -225,7 +225,7 @@ func sqlRowsToTopic(rows *sql.Rows) (domain.Topic, error) {
 		}
 	} else {
 		return domain.Topic{}, utility.CreateCustomError(
-			sqlRowsToTopic, fmt.Errorf("rows are empty"))
+			sqlRowsToTopic, errors.New(ErrNoRows))
 	}
 	return result, nil
 }

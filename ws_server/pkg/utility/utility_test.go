@@ -70,6 +70,21 @@ func Test_CreateCustomError(t *testing.T) {
 	fmt.Println(err.Error())
 }
 
+func Test_UnwrapErrorsToLast(t *testing.T) {
+	libraryErr := "<some library error>"
+	err := CreateCustomError(GetFunctionName, fmt.Errorf(libraryErr))
+	err = CreateCustomError(GetFunctionName, err)
+	err = CreateCustomError(strconv.Atoi, err)
+	err = CreateCustomError(IsFunction, err)
+	//...
+
+	lastErr := UnwrapErrorsToLast(err)
+	fmt.Println(lastErr.Error())
+	if lastErr.Error() != libraryErr {
+		t.Errorf("Is there something wrong")
+	}
+}
+
 func Test_RandomString(t *testing.T) {
 	wantLength := 10
 	if gotLength := len(RandomString(wantLength)); gotLength != wantLength {

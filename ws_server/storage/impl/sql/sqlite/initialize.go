@@ -3,7 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"ilserver/pkg/utility"
 	"os"
 
@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var databaseDirectory = "../storage/" // ?
+var databaseDirectory = "../storage/" // TODO: ?
 
 func PathToDatabaseFile() string {
 	return databaseDirectory +
@@ -34,7 +34,6 @@ func initialize(ctx context.Context) error {
 
 	// ***
 
-	// TODO: добавить контекст с таймером?
 	return initializeTables(ctx)
 }
 
@@ -64,7 +63,7 @@ func initializeTables(ctx context.Context) error {
 func openDatabaseFile() (*sql.DB, error) {
 	if !exists(PathToDatabaseFile()) {
 		return nil, utility.CreateCustomError(
-			openDatabaseFile, fmt.Errorf("database file does not exist")) // base error!
+			openDatabaseFile, errors.New(ErrDbFileNotExist))
 	}
 
 	return sql.Open(

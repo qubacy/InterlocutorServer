@@ -3,7 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"ilserver/domain"
 	"ilserver/pkg/utility"
 )
@@ -244,7 +244,7 @@ func sqlRowsToRecordCount(rows *sql.Rows) (int, error) {
 		}
 	} else {
 		return 0, utility.CreateCustomError(
-			sqlRowsToRecordCount, fmt.Errorf("rows are empty"))
+			sqlRowsToRecordCount, errors.New(ErrNoRows))
 	}
 	return recordCount, nil
 }
@@ -271,7 +271,7 @@ func sqlRowsToAdmin(rows *sql.Rows) (domain.Admin, error) {
 		}
 	} else {
 		return domain.Admin{}, utility.CreateCustomError(
-			sqlRowsToAdmin, fmt.Errorf("rows are empty"))
+			sqlRowsToAdmin, errors.New(ErrNoRows))
 	}
 	return result, nil
 }

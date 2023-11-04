@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -34,6 +35,13 @@ func GetFunctionName(i interface{}) string {
 
 func CreateCustomError(i interface{}, err error) error {
 	return fmt.Errorf(GetFunctionName(i)+"\n with an error/in: %w", err)
+}
+
+func UnwrapErrorsToLast(err error) error {
+	for errors.Unwrap(err) != nil {
+		err = errors.Unwrap(err)
+	}
+	return err
 }
 
 func RandomString(n int) string {

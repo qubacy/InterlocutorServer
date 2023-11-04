@@ -1,10 +1,11 @@
-package token
+package impl
 
 import (
 	"bytes"
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"ilserver/pkg/token"
 	"os"
 	"strings"
 	"testing"
@@ -16,6 +17,7 @@ import (
 func TestMain(m *testing.M) {
 	fmt.Println("...start test main...")
 
+	// no need to use server options!
 	if err := setUp(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
@@ -57,38 +59,50 @@ func setUpViper() error {
 	return nil
 }
 
+// tests
 // -----------------------------------------------------------------------
 
 func Test_NewToken(t *testing.T) {
-	err, tokenString := NewToken("test")
+	manager := newManagerWithChecks(t)
+
+	// ***
+
+	err, tokenValue := manager.NewToken(
+		token.Payload{Subject: "test"},
+		viper.GetDuration("control_server.token.duration"),
+	)
 	if err != nil {
 		t.Errorf("Is there something wrong. Err: %v", err)
 	}
 
 	// ***
 
-	fmt.Println(tokenString)
-	tokenParts := strings.Split(tokenString, ".")
+	fmt.Println(tokenValue)
+	tokenParts := strings.Split(tokenValue, ".")
 	if len(tokenParts) != 3 {
 		t.Errorf("Is there something wrong. Err: %v", err)
 	}
 
-	// ***
+	// *** view token parts ***
 
 	encoding := base64.StdEncoding.WithPadding(base64.NoPadding) // ?
-	header, err := encoding.DecodeString(tokenParts[0])
+	headerBytes, err := encoding.DecodeString(tokenParts[0])
 	if err != nil {
 		t.Errorf("Decode header failed. Err: %v", err)
 	}
-	fmt.Println(string(header))
+	fmt.Println(string(headerBytes))
 
 	// ***
 
-	payload, err := encoding.DecodeString(tokenParts[1])
+	payloadBytes, err := encoding.DecodeString(tokenParts[1])
 	if err != nil {
 		t.Errorf("Decode payload failed. Err: %v", err)
 	}
-	fmt.Println(string(payload))
+	fmt.Println(string(payloadBytes))
+}
+
+func Test_Verify(t *testing.T) {
+
 }
 
 // experiments
@@ -260,4 +274,16 @@ func Test_time_Now(t *testing.T) {
 	fmt.Println("Now unix utc time:", time.Now().UTC().Unix())
 
 	//...
+}
+
+// private
+// -----------------------------------------------------------------------
+
+func newManagerWithChecks(t *testing.T) *Manager {
+	manager, err := NewManager(viper.GetString("control_server.token.secret"))
+	if err != nil {
+		t.Fatalf("Failed to new manager object. Err: %v", err)
+		return nil
+	}
+	return manager
 }

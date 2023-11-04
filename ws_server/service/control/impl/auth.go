@@ -28,7 +28,7 @@ func (self *Auth) SignIn(ctx context.Context, reqDto dto.SignInInput) (dto.SignI
 	if !isValidSignInInput(reqDto) {
 		return dto.SignInOutput{
 			AccessToken: "",
-			ErrorText:   control.LoginOrPasswordIsTooShort(),
+			ErrorText:   control.ErrLoginOrPasswordIsTooShort(),
 		}, nil
 	}
 
@@ -41,7 +41,7 @@ func (self *Auth) SignIn(ctx context.Context, reqDto dto.SignInInput) (dto.SignI
 	if !has {
 		return dto.SignInOutput{
 			AccessToken: "",
-			ErrorText:   control.LoginNotFoundOrPasswordIsIncorrect(reqDto.Login),
+			ErrorText:   control.ErrLoginNotFoundOrPasswordIsIncorrect(reqDto.Login),
 		}, nil
 	}
 
