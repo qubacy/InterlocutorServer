@@ -15,8 +15,7 @@ type PostTopicReq struct {
 }
 
 type PostTopicRes struct {
-	ErrorText string  `json:"errorText"`
-	Idr       float64 `json:"idr"`
+	Idr float64 `json:"idr"`
 }
 
 // converter

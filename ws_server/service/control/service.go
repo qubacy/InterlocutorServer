@@ -5,6 +5,8 @@ import (
 	"ilserver/service/control/dto"
 )
 
+// go:generate
+
 type AuthService interface {
 	SignIn(ctx context.Context, inp dto.SignInInput) (dto.SignInOutput, error)
 }
@@ -26,7 +28,7 @@ type TopicService interface {
 	DeleteTopics(ctx context.Context, accessToken string) (dto.DeleteTopicsOutput, error)
 }
 
-type Service interface {
+type Services struct {
 	AuthService
 	AdminService
 	TopicService

@@ -70,6 +70,14 @@ func Test_CreateCustomError(t *testing.T) {
 	fmt.Println(err.Error())
 }
 
+func Test_CreateCustomError_v1(t *testing.T) {
+	err := CreateCustomError(GetFunctionName, fmt.Errorf("<some library error>"))
+	fmt.Println(err.Error())
+
+	err = errors.Unwrap(err)
+	fmt.Println(err.Error())
+}
+
 func Test_UnwrapErrorsToLast(t *testing.T) {
 	libraryErr := "<some library error>"
 	err := CreateCustomError(GetFunctionName, fmt.Errorf(libraryErr))

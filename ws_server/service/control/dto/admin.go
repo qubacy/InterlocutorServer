@@ -6,23 +6,18 @@ import "ilserver/domain"
 
 type GetAdminsOutput struct {
 	AdminLogins []string
-	ErrorText   string
 }
 
 // ---> 200
 func MakeGetAdminsSuccess(adminLogins []string) GetAdminsOutput {
 	return GetAdminsOutput{
 		AdminLogins: adminLogins,
-		ErrorText:   "",
 	}
 }
 
 // ---> 400
-func MakeGetAdminsError(errorText string) GetAdminsOutput {
-	return GetAdminsOutput{
-		AdminLogins: []string{},
-		ErrorText:   errorText,
-	}
+func MakeGetAdminsEmpty() GetAdminsOutput {
+	return GetAdminsOutput{}
 }
 
 // -----------------------------------------------------------------------
@@ -34,8 +29,7 @@ type PostAdminInput struct {
 }
 
 type PostAdminOutput struct {
-	Idr       int64
-	ErrorText string
+	Idr int64
 }
 
 func PostAdminInputToDomain(inp PostAdminInput) domain.Admin {
@@ -48,23 +42,18 @@ func PostAdminInputToDomain(inp PostAdminInput) domain.Admin {
 // ---> 200
 func MakePostAdminSuccess(idr int64) PostAdminOutput {
 	return PostAdminOutput{
-		Idr:       idr,
-		ErrorText: "",
+		Idr: idr,
 	}
 }
 
 // ---> 400
-func MakePostAdminError(errorText string) PostAdminOutput {
-	return PostAdminOutput{
-		Idr:       0,
-		ErrorText: errorText,
-	}
+func MakePostAdminEmpty() PostAdminOutput {
+	return PostAdminOutput{}
 }
 
 // -----------------------------------------------------------------------
 
 type DeleteAdminByIdrOutput struct {
-	ErrorText string
 }
 
 // ---> 200
@@ -73,8 +62,6 @@ func MakeDeleteAdminByIdrSuccess() DeleteAdminByIdrOutput {
 }
 
 // ---> 400
-func MakeDeleteAdminByIdrError(errorText string) DeleteAdminByIdrOutput {
-	return DeleteAdminByIdrOutput{
-		ErrorText: errorText,
-	}
+func MakeDeleteAdminByIdrEmpty() DeleteAdminByIdrOutput {
+	return DeleteAdminByIdrOutput{}
 }

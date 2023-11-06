@@ -1,4 +1,4 @@
-package impl
+package base
 
 import (
 	"context"
@@ -27,9 +27,9 @@ func NewAdminService(storage storage.Storage, tokenManager token.Manager) *Admin
 func (s *AdminService) GetAdmins(ctx context.Context, accessToken string) (dto.GetAdminsOutput, error) {
 	if len(accessToken) == 0 {
 		// ---> 400
-		return dto.MakeGetAdminsError(
-			control.ErrAccessTokenIsEmpty(),
-		), nil
+		return dto.MakeGetAdminsEmpty(),
+			utility.CreateCustomError(s.GetAdmins,
+				control.ErrAccessTokenIsEmpty())
 	}
 
 	// *** just check that the token is valid...
@@ -37,9 +37,8 @@ func (s *AdminService) GetAdmins(ctx context.Context, accessToken string) (dto.G
 	err := s.tokenManager.Validate(accessToken)
 	if err != nil {
 		// ---> 400
-		return dto.MakeGetAdminsError(
-			utility.UnwrapErrorsToLast(err).Error(), // error may not be pretty!
-		), nil
+		return dto.MakeGetAdminsEmpty(),
+			utility.CreateCustomError(s.GetAdmins, err)
 	}
 
 	// ***
@@ -47,9 +46,8 @@ func (s *AdminService) GetAdmins(ctx context.Context, accessToken string) (dto.G
 	admins, err := s.storage.AllAdmins(ctx)
 	if err != nil {
 		// ---> 400
-		return dto.MakeGetAdminsError(
-			utility.UnwrapErrorsToLast(err).Error(),
-		), nil
+		return dto.MakeGetAdminsEmpty(),
+			utility.CreateCustomError(s.GetAdmins, err)
 	}
 
 	// ---> 200
@@ -61,9 +59,9 @@ func (s *AdminService) GetAdmins(ctx context.Context, accessToken string) (dto.G
 func (s *AdminService) PostAdmin(ctx context.Context, inp dto.PostAdminInput) (dto.PostAdminOutput, error) {
 	if !isValidPostAdminInput(inp) {
 		// ---> 400
-		return dto.MakePostAdminError(
-			control.ErrInputDtoIsInvalid(),
-		), nil
+		return dto.MakePostAdminEmpty(),
+			utility.CreateCustomError(s.PostAdmin,
+				control.ErrInputDtoIsInvalid())
 	}
 
 	// ***
@@ -71,9 +69,8 @@ func (s *AdminService) PostAdmin(ctx context.Context, inp dto.PostAdminInput) (d
 	err := s.tokenManager.Validate(inp.AccessToken)
 	if err != nil {
 		// ---> 400
-		return dto.MakePostAdminError(
-			utility.UnwrapErrorsToLast(err).Error(),
-		), nil
+		return dto.MakePostAdminEmpty(),
+			utility.CreateCustomError(s.PostAdmin, err)
 	}
 
 	// ***
@@ -81,9 +78,8 @@ func (s *AdminService) PostAdmin(ctx context.Context, inp dto.PostAdminInput) (d
 	idr, err := s.storage.InsertAdmin(ctx, dto.PostAdminInputToDomain(inp))
 	if err != nil {
 		// ---> 400
-		return dto.MakePostAdminError(
-			utility.UnwrapErrorsToLast(err).Error(),
-		), nil
+		return dto.MakePostAdminEmpty(),
+			utility.CreateCustomError(s.PostAdmin, err)
 	}
 
 	// ***
@@ -95,25 +91,23 @@ func (s *AdminService) PostAdmin(ctx context.Context, inp dto.PostAdminInput) (d
 func (s *AdminService) DeleteAdminByIdr(ctx context.Context, accessToken string, idr int) (dto.DeleteAdminByIdrOutput, error) {
 	if len(accessToken) == 0 {
 		// ---> 400
-		return dto.MakeDeleteAdminByIdrError(
-			control.ErrAccessTokenIsEmpty(),
-		), nil
+		return dto.MakeDeleteAdminByIdrEmpty(),
+			utility.CreateCustomError(s.DeleteAdminByIdr,
+				control.ErrAccessTokenIsEmpty())
 	}
 
 	err := s.tokenManager.Validate(accessToken)
 	if err != nil {
 		// ---> 400
-		return dto.MakeDeleteAdminByIdrError(
-			utility.UnwrapErrorsToLast(err).Error(),
-		), nil
+		return dto.MakeDeleteAdminByIdrEmpty(),
+			utility.CreateCustomError(s.DeleteAdminByIdr, err)
 	}
 
 	err = s.storage.DeleteAdmin(ctx, idr)
 	if err != nil {
 		// ---> 400
-		return dto.MakeDeleteAdminByIdrError(
-			utility.UnwrapErrorsToLast(err).Error(),
-		), nil
+		return dto.MakeDeleteAdminByIdrEmpty(),
+			utility.CreateCustomError(s.DeleteAdminByIdr, err)
 	}
 
 	// ---> 200

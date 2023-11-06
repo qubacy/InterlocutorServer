@@ -3,13 +3,11 @@ package dto
 import "ilserver/domain"
 
 type GetTopicsOutput struct {
-	Topics    domain.TopicList
-	ErrorText string
+	Topics domain.TopicList
 }
 
 type GetRandomTopicOutput struct {
-	Topic     domain.Topic
-	ErrorText string
+	Topic domain.Topic
 }
 
 // -----------------------------------------------------------------------
@@ -21,8 +19,7 @@ type PostTopicInput struct {
 }
 
 type PostTopicOutput struct {
-	Idr       int
-	ErrorText string
+	Idr int64
 }
 
 // -----------------------------------------------------------------------
@@ -32,16 +29,10 @@ type PostTopicsInput struct {
 	Topics      domain.TopicList
 }
 
-type PostTopicsOutput struct {
-	ErrorText string
-}
+type PostTopicsOutput struct{}
 
 // -----------------------------------------------------------------------
 
-type DeleteTopicByIdrOutput struct {
-	ErrorText string
-}
+type DeleteTopicByIdrOutput struct{}
 
-type DeleteTopicsOutput struct {
-	ErrorText string
-}
+type DeleteTopicsOutput struct{}

@@ -17,3 +17,5 @@
 ## Useful links
 - Golang SQLite Simple Example // John Pili / URL: https://www.codeproject.com/Articles/5261771/Golang-SQLite-Simple-Example
 - Как работать с ошибками бизнес-логики через HTTP // mitya_k / URL: https://habr.com/ru/articles/545524/
+- HTTP // Anton Elmanov / URL: https://golangforall.com/ru/post/http.html
+- 

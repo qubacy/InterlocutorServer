@@ -7,5 +7,16 @@ type SignInInput struct {
 
 type SignInOutput struct {
 	AccessToken string
-	ErrorText   string
+}
+
+// ---> 200
+func MakeSignInSuccess(accessToken string) SignInOutput {
+	return SignInOutput{
+		AccessToken: accessToken,
+	}
+}
+
+// ---> 400
+func MakeSignInEmpty() SignInOutput {
+	return SignInOutput{}
 }
