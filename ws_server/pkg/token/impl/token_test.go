@@ -46,13 +46,13 @@ func setUp() error {
 
 func setUpViper() error {
 	key := "control_server.token.secret"
-	viper.Set(key, "secret")
+	viper.Set(key, "test_secret")
 	if len(viper.GetString(key)) == 0 {
 		return fmt.Errorf("Value by key '%v' is empty", key)
 	}
 
 	key = "control_server.token.duration"
-	viper.Set(key, 5*time.Minute)
+	viper.Set(key, 876000*time.Hour) // 100 years...
 	if len(viper.GetString(key)) == 0 {
 		return fmt.Errorf("Value by key '%v' is empty", key)
 	}
@@ -67,8 +67,8 @@ func Test_NewToken(t *testing.T) {
 
 	// ***
 
-	err, tokenValue := manager.NewToken(
-		token.Payload{Subject: "test"},
+	tokenValue, err := manager.NewToken(
+		token.Payload{Subject: "test_user"},
 		viper.GetDuration("control_server.token.duration"),
 	)
 	if err != nil {
@@ -279,7 +279,7 @@ func Test_time_Now(t *testing.T) {
 // private
 // -----------------------------------------------------------------------
 
-func newManagerWithChecks(t *testing.T) *Manager {
+func newManagerWithChecks(t *testing.T) token.Manager {
 	manager, err := NewManager(viper.GetString("control_server.token.secret"))
 	if err != nil {
 		t.Fatalf("Failed to new manager object. Err: %v", err)

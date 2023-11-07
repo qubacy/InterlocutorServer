@@ -27,11 +27,11 @@ func NewManager(signingKey string) (*Manager, error) {
 // ---> 500
 // -----------------------------------------------------------------------
 
-func (s *Manager) NewToken(payload token.Payload, duration time.Duration) (error, string) {
+func (s *Manager) NewToken(payload token.Payload, duration time.Duration) (string, error) {
 	key := []byte(s.signingKey)
 	signer, err := jwt.NewSignerHS(jwt.HS256, key)
 	if err != nil {
-		return utility.CreateCustomError(s.NewToken, err), ""
+		return "", utility.CreateCustomError(s.NewToken, err)
 	}
 
 	claims := &jwt.RegisteredClaims{
@@ -43,9 +43,9 @@ func (s *Manager) NewToken(payload token.Payload, duration time.Duration) (error
 	builder := jwt.NewBuilder(signer)
 	token, err := builder.Build(claims)
 	if err != nil {
-		return utility.CreateCustomError(s.NewToken, err), ""
+		return "", utility.CreateCustomError(s.NewToken, err)
 	}
-	return nil, token.String()
+	return token.String(), nil
 }
 
 // with user-friendly errors?

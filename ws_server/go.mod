@@ -9,7 +9,13 @@ require (
 
 require (
 	github.com/cristalhq/jwt/v5 v5.1.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/jfrog/go-mockhttp v0.3.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.17 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/testify v1.8.3 // indirect
+	go.nhat.io/httpmock v0.11.0 // indirect
 )
 
 require (
