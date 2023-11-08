@@ -34,6 +34,13 @@ type ChoosingStateRoom struct {
 type Room struct {
 	State        interface{}
 	CreationTime time.Time
-	Profiles     []Profile // index is id
+	Profiles     []Profile // index is id.
 	Language     int
+}
+
+func (self *Room) RemoveProfile(index int) {
+	self.Profiles = append(
+		self.Profiles[:index],
+		self.Profiles[index+1:]...,
+	)
 }

@@ -31,7 +31,8 @@ enum class operation : int {
   "body": {
     "profile": {
       "username": "<string>",
-      "contact": "<string>"
+      "contact": "<string>",
+      "language": "<int>"
     }
   }
 }
