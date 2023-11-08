@@ -1,6 +1,7 @@
 package base
 
 import (
+	"encoding/json"
 	"ilserver/pkg/token"
 	service "ilserver/service/control"
 	"net/http"
@@ -23,77 +24,79 @@ func NewHandler(
 
 func (self *Handler) Mux(pathStart string) *http.ServeMux {
 	serveMux := http.NewServeMux()
-	// serveMux.HandleFunc(pathStart+"sign-in", self.SignIn)
+	serveMux.HandleFunc(pathStart+"sign-in", self.SignIn)
 
-	// serveMux.Handle(pathStart+"topics", NewAdminIdentity(self.Topics))
-	// serveMux.Handle(pathStart+"topic", NewAdminIdentity(self.Topic))
+	//serveMux.Handle(pathStart+"topics", NewAdminIdentity(self.tokenManager, self.Topics))
+	serveMux.Handle(pathStart+"topic", NewAdminIdentity(self.tokenManager, self.Topic))
 	return serveMux
 }
 
 // public
 // -----------------------------------------------------------------------
 
-// func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method != http.MethodPost {
-// 		http.NotFound(w, r)
-// 		return
-// 	}
+func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
+	//r.Context()
 
-// 	// ***
+	if r.Method != http.MethodPost {
+		http.NotFound(w, r)
+		return
+	}
 
-// 	err := r.ParseForm()
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
+	// ***
 
-// 	if !r.PostForm.Has("login") || !r.PostForm.Has("pass") {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-// 	// ***
+	if !r.PostForm.Has("login") || !r.PostForm.Has("pass") {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-// 	dtoReq := controlDto.SignInReq{
-// 		Login: r.PostForm.Get("login"),
-// 		Pass:  r.PostForm.Get("pass"),
-// 	}
+	// ***
 
-// 	// ***
+	dtoReq := controlDto.SignInReq{
+		Login: r.PostForm.Get("login"),
+		Pass:  r.PostForm.Get("pass"),
+	}
 
-// 	err, dtoRes := h.authService.SignIn(dtoReq)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		w.Write([]byte(err.Error()))
-// 		return
-// 	}
+	// ***
 
-// 	// ***
+	err, dtoRes := h.services.AuthService.
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
-// 	resultBytes, err := json.Marshal(dtoRes)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		w.Write([]byte(err.Error()))
-// 		return
-// 	}
+	// ***
 
-// 	w.Header().Add("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	_, err = w.Write(resultBytes)
+	resultBytes, err := json.Marshal(dtoRes)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		return
-// 	}
-// }
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(resultBytes)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
 
 // // -----------------------------------------------------------------------
 
-// func (h *Handler) Topic(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == http.MethodPost {
-// 		h.postTopic(w, r)
-// 	}
-// }
+func (h *Handler) Topic(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		//writeError()..
+	}
+}
 
 // func (h *Handler) Topics(w http.ResponseWriter, r *http.Request) {
 // 	if r.Method == http.MethodPost {

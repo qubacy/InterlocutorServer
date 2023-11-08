@@ -9,10 +9,6 @@
 ### Http
 - Control
   - Description [here](./ws_server/about/proto/http/control/api/desc.md)
-  - Examples [here](./ws_server/about/proto/http/control/api/examples.md)
-  
-- Debug
-  - Very simple handlers.
 
 ## Useful links
 - Golang SQLite Simple Example // John Pili / URL: https://www.codeproject.com/Articles/5261771/Golang-SQLite-Simple-Example

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/mock"
 	httpMock "go.nhat.io/httpmock/mock/http"
 )
 
@@ -48,20 +49,28 @@ func setUpViper() error {
 	if len(viper.GetString(key)) == 0 {
 		return fmt.Errorf("Value by key '%v' is empty", key)
 	}
+
+	// solution is not very good...
+	key = "_access_token"
+	viper.Set(key, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJleHAiOjQ4NTI5Nzc2MTd9.RXYKk1gtXKZvpkn1idtGXtp4SE2Qzq9aoCM1OXjAK5M")
+	if len(viper.GetString(key)) == 0 {
+		return fmt.Errorf("Value by key '%v' is empty", key)
+	}
+
 	return nil
 }
 
 // tests
 // -----------------------------------------------------------------------
 
-func Test_AdminIdentity_ServeHTTP(t *testing.T) {
+func Test_AdminIdentity_ServeHTTP_okk(t *testing.T) {
 	tokenManager := newTokenManagerWithChecks(t)
 	expectedResultBytes := []byte("<protected logic>")
 
 	middleware := NewAdminIdentity(
 		tokenManager,
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Write(expectedResultBytes)
+			w.Write(expectedResultBytes) // no reaction...
 			//...
 		})
 
@@ -73,11 +82,40 @@ func Test_AdminIdentity_ServeHTTP(t *testing.T) {
 
 	middleware.ServeHTTP(response,
 		httpMock.BuildRequest().
-			WithHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJleHAiOjQ4NTI5Nzc2MTd9.RXYKk1gtXKZvpkn1idtGXtp4SE2Qzq9aoCM1OXjAK5M").
+			WithHeader("Authorization",
+				fmt.Sprintf("Bearer %v", viper.GetString("_access_token"))).
 			Build(),
 	)
 
 	response.AssertCalled(t, "Write", expectedResultBytes)
+}
+
+func Test_AdminIdentity_ServeHTTP_err(t *testing.T) {
+	tokenManager := newTokenManagerWithChecks(t)
+	expectedResultBytes := []byte("<protected logic>")
+
+	middleware := NewAdminIdentity(
+		tokenManager,
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write(expectedResultBytes) // no reaction...
+			//...
+		})
+
+	// ***
+
+	response := new(httpMock.ResponseWriter)
+	response.On("WriteHeader", http.StatusBadRequest)
+	response.On("Write", mock.Anything).Return(0, nil)
+
+	middleware.ServeHTTP(response,
+		httpMock.BuildRequest().
+			WithHeader("Authorization",
+				fmt.Sprintf("Bearer %v", "123")).
+			Build(),
+	)
+
+	response.AssertCalled(t, "WriteHeader", http.StatusBadRequest)
+	response.AssertCalled(t, "Write", mock.Anything)
 }
 
 // experiments
