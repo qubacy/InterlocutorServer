@@ -68,13 +68,7 @@ enum class operation : int {
           "id": "<int>",
           "username": "<string>"
         },
-        {
-          "id": "<int>",
-          "username": "<string>"
-        },
-        {
-          "_comment": "..."
-        }
+        ...
       ],
       "startSessionTime": "<int>"
     }
@@ -151,8 +145,7 @@ enum class operation : int {
   "body": {
     "userIdList": [
       "<int>",
-      "<int>",
-      "<int>"
+      ...
     ]
   }
 }
@@ -170,7 +163,8 @@ enum class operation : int {
       {
         "id": "<int>",
         "contact": "<string>"
-      }
+      },
+      ...
     ]
   }
 }

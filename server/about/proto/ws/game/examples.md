@@ -8,7 +8,8 @@
   "body": {
     "profile": {
       "username": "basic",
-      "contact": "@basic"
+      "contact": "@basic",
+      "language": 1
     }
   }
 }

@@ -19,19 +19,22 @@ func (s *Storage) RemoveProfileById(id string) {
 
 	roomIndex, profileIndex, exist :=
 		s.findRoomIndexWithProfile(id)
-	if !exist {
-		return
-	}
 
-	s.rooms[roomIndex].
-		RemoveProfile(profileIndex)
+	if exist {
+		s.rooms[roomIndex].
+			RemoveProfile(profileIndex)
+	}
 }
 
-func (s *Storage) InsertRoomWithSearchingState() {
+func (s *Storage) InsertRoomWithSearchingState(lang int) {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
 
+	room := domain.MakeEmptyRoomWithSearchingState(lang)
+	s.rooms = append(s.rooms, room)
 }
+
+// TODO: Update...
 
 // private
 // -----------------------------------------------------------------------

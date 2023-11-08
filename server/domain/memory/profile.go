@@ -5,3 +5,5 @@ type Profile struct {
 	Username string
 	Contact  string
 }
+
+type ProfileList []Profile
