@@ -1,8 +1,9 @@
 package main
 
 import (
+	"ilserver/app"
 	"ilserver/config"
-	"ilserver/server"
+
 	"log"
 )
 
@@ -13,7 +14,7 @@ func main() {
 
 	// ***
 
-	app := server.NewApp()
+	app := app.NewApp()
 
 	// ***
 

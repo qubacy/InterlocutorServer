@@ -8,7 +8,7 @@ import (
 	"ilserver/service/control/dto"
 	"time"
 
-	"ilserver/storage"
+	storage "ilserver/storage/control"
 )
 
 type AuthService struct {

@@ -1,6 +1,10 @@
 package dto
 
-import "ilserver/domain"
+import (
+	"encoding/json"
+	"ilserver/domain"
+	service "ilserver/service/control/dto"
+)
 
 /*
 
@@ -12,34 +16,13 @@ The default concrete Go types are:
 
 */
 
+// -----------------------------------------------------------------------
+
 type GetTopicDto struct {
 	Idr  float64 `json:"idr"` // ---> uint64
 	Lang float64 `json:"lang"`
 	Name string  `json:"name"`
 }
-
-type PostTopicDto struct {
-	Lang float64 `json:"lang"`
-	Name string  `json:"name"`
-}
-
-// req/res
-// -----------------------------------------------------------------------
-
-type GetTopicReq struct{}
-
-type GetTopicRes struct {
-	Topics []GetTopicDto `json:"topics"`
-}
-
-type PostTopicReq struct {
-	Topics []PostTopicDto `json:"topics"`
-}
-
-type PostTopicRes struct{}
-
-// constructor
-// -----------------------------------------------------------------------
 
 func MakeGetTopicDto(topic domain.Topic) GetTopicDto {
 	return GetTopicDto{
@@ -47,6 +30,26 @@ func MakeGetTopicDto(topic domain.Topic) GetTopicDto {
 		Lang: float64(topic.Lang),
 		Name: topic.Name,
 	}
+}
+
+type PostTopicDto struct {
+	Lang float64 `json:"lang"`
+	Name string  `json:"name"`
+}
+
+func (self *PostTopicDto) ToDomain() domain.Topic {
+	return domain.Topic{
+		Name: self.Name,
+		Lang: int(self.Lang),
+	}
+}
+
+// -----------------------------------------------------------------------
+
+type GetTopicReq struct{}
+
+type GetTopicRes struct {
+	Topics []GetTopicDto `json:"topics"`
 }
 
 func MakeGetTopicRes(topics domain.TopicList) GetTopicRes {
@@ -58,30 +61,34 @@ func MakeGetTopicRes(topics domain.TopicList) GetTopicRes {
 	return result
 }
 
-// converter
 // -----------------------------------------------------------------------
 
-func (self GetTopicDto) ToDomain() domain.Topic {
-	return domain.Topic{
-		Idr:  int(self.Idr),
-		Lang: int(self.Lang),
-		Name: self.Name,
-	}
+type PostTopicReq struct {
+	Topics []PostTopicDto `json:"topics"`
 }
 
-func (self PostTopicDto) ToDomain() domain.Topic {
-	return domain.Topic{
-		Idr:  0, // <--- not initialized!
-		Lang: int(self.Lang),
-		Name: self.Name,
+func MakePostTopicReqFromJson(rawJson []byte) (PostTopicReq, error) {
+	result := PostTopicReq{}
+	err := json.Unmarshal(rawJson, &result)
+	if err != nil {
+		return MakePostTopicReqEmpty(), err
 	}
+
+	return result, nil
 }
 
-func (self *PostTopicReq) ToDomainList() domain.TopicList {
-	result := domain.TopicList{}
+func MakePostTopicReqEmpty() PostTopicReq {
+	return PostTopicReq{}
+}
+
+func (self *PostTopicReq) ToServiceInp() service.PostTopicsInput {
+	result := service.PostTopicsInput{}
 	for i := range self.Topics {
-		result = append(result,
+		result.Topics = append(result.Topics,
 			self.Topics[i].ToDomain())
 	}
+
 	return result
 }
+
+type PostTopicRes struct{}

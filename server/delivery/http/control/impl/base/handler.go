@@ -111,8 +111,7 @@ func (h *Handler) getAdmin(ctx context.Context, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	resDto := dto.MakeGetAdminRes(serviceOut)
-	writeJsonOk(w, resDto)
+	writeJsonOk(w, dto.MakeGetAdminRes(serviceOut))
 }
 
 func (h *Handler) postAdmin(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -158,9 +157,35 @@ func (h *Handler) Topic(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getTopic(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	io.Copy(io.Discard, r.Body)
 
+	serviceOut, err := h.services.GetTopics(ctx)
+	if err != nil {
+		writeRawError(w, err)
+		return
+	}
+
+	writeJsonOk(w, dto.MakeGetTopicRes(serviceOut.Topics))
 }
 
 func (h *Handler) postTopic(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	jsonBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		writeRawError(w, err)
+		return
+	}
 
+	reqDto, err := dto.MakePostTopicReqFromJson(jsonBytes)
+	if err != nil {
+		writeRawError(w, err)
+		return
+	}
+
+	_, err = h.services.PostTopics(ctx, reqDto.ToServiceInp())
+	if err != nil {
+		writeRawError(w, err)
+		return
+	}
+
+	writeOk(w)
 }

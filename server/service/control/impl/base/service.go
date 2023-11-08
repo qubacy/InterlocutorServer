@@ -2,7 +2,7 @@ package base
 
 import (
 	"ilserver/pkg/token"
-	"ilserver/storage"
+	storage "ilserver/storage/control"
 	"time"
 )
 

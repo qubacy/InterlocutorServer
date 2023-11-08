@@ -6,7 +6,7 @@ import (
 	"ilserver/pkg/utility"
 	"ilserver/service/control"
 	"ilserver/service/control/dto"
-	"ilserver/storage"
+	storage "ilserver/storage/control"
 )
 
 type TopicService struct {

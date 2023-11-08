@@ -4,7 +4,7 @@ import (
 	"context"
 	"ilserver/domain"
 	"ilserver/pkg/utility"
-	"ilserver/storage"
+	storage "ilserver/storage/control"
 	"math/rand"
 	"strconv"
 	"testing"
