@@ -29,7 +29,7 @@ func NewHandler(
 
 // -----------------------------------------------------------------------
 
-// pathStart ---> ends with '/'
+// pathStart ---> starts and ends with '/'
 // serveMux  ---> handler itself.
 func (self *Handler) Mux(pathStart string) *http.ServeMux {
 	serveMux := http.NewServeMux()

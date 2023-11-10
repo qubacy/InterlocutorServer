@@ -1,6 +1,4 @@
-package overWsDto
-
-//TODO: нужны ли коды операций в ответе для клиента?
+package dto
 
 const (
 	SEARCHING_START int = iota

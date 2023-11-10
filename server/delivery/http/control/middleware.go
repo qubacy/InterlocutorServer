@@ -16,7 +16,7 @@ func NewLogging(handler http.Handler) *Logging {
 }
 
 func (self *Logging) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	log.Println(req.URL, req.RequestURI)
+	log.Println(req.Method, req.RequestURI)
 	//...
 
 	self.handler.ServeHTTP(w, req)

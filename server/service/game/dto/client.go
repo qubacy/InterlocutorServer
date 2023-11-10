@@ -1,9 +1,7 @@
-package overWsDto
-
-// TODO: общие DTOs независимо от протокола?
+package dto
 
 import (
-	"ilserver/domain"
+	domain "ilserver/domain/memory"
 )
 
 // parts
@@ -12,7 +10,7 @@ import (
 type Profile struct {
 	Username string `json:"username"`
 	Contact  string `json:"contact"`
-	Language int    `json:"lang"` // TODO: add lang to docs
+	Language int    `json:"lang"`
 }
 
 type CliMessage struct {

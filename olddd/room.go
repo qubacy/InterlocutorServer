@@ -2,9 +2,9 @@ package impl
 
 import (
 	"ilserver/domain"
+	"ilserver/storage/game"
 	"ilserver/transport/overWsDto"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -15,19 +15,24 @@ type UpdateRoomMessage struct {
 	BytesResDto []byte
 }
 
+/*
+
+RemoveProfileById
+
+
+*/
+
 type RoomService struct {
-	Mx    sync.RWMutex
-	Rooms []domain.Room
+	storage game.Storage
 
 	// ***
 
 	UpdateRoomMsgs chan UpdateRoomMessage
 }
 
-func NewRoomService() *RoomService {
+func NewRoomService(storage game.Storage) *RoomService {
 	return &RoomService{
-		Mx:             sync.RWMutex{},
-		Rooms:          make([]domain.Room, 0),
+		storage:        storage,
 		UpdateRoomMsgs: make(chan UpdateRoomMessage),
 	}
 }
@@ -119,7 +124,7 @@ func (rs *RoomService) updateRoomWithSearchingState(roomInx int) {
 		return
 	}
 
-	searchingState := rs.Rooms[roomInx].State.(*domain.SearchingStateRoom)
+	searchingState, ok := rs.Rooms[roomInx].State.(*domain.SearchingStateRoom)
 	dur := time.Now().Sub(searchingState.LastUpdateTime)
 
 	// TODO: сложный путь до параметра в файле конфигурации
@@ -133,7 +138,8 @@ func (rs *RoomService) updateRoomWithSearchingState(roomInx int) {
 		return
 	}
 
-	// TODO: make или new функция
+	// write
+
 	rs.Rooms[roomInx].State = &domain.ChattingStateRoom{
 		RoomState: domain.RoomState{
 			Name:       domain.CHATTING,
@@ -147,6 +153,7 @@ func (rs *RoomService) updateRoomWithSearchingState(roomInx int) {
 		FoundGameData: makeFoundGameData(),
 	}
 
+	// копирование профилей в ответ
 	for i := range rs.Rooms[roomInx].Profiles {
 		current := &rs.Rooms[roomInx].Profiles[i]
 		gameFoundBody.FoundGameData.ProfilePublicList = append(

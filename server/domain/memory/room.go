@@ -1,22 +1,28 @@
 package memory
 
-import "time"
+import (
+	"time"
+)
 
 // -----------------------------------------------------------------------
 
 type Room struct {
+	Id           string
 	State        interface{}
 	CreationTime time.Time
 	Profiles     ProfileList // index is id.
 	Language     int
 }
 
+type RoomList []Room
+
 func MakeEmptyRoomWithSearchingState(lang int) Room {
 	currentTime := time.Now()
 	return Room{
+		Id:       "",
 		Profiles: ProfileList{},
 
-		State:        NewSearchingStateRoom(currentTime),
+		State:        MakeSearchingRoomState(currentTime), // value!
 		CreationTime: currentTime,
 		Language:     lang,
 	}
@@ -53,23 +59,50 @@ func MakeRoomState(name int, launchTime time.Time) RoomState {
 // concrete
 // -----------------------------------------------------------------------
 
-type SearchingStateRoom struct {
+type SearchingRoomState struct {
 	RoomState
 	LastUpdateTime time.Time
 }
 
-func NewSearchingStateRoom(time time.Time) *SearchingStateRoom {
-	return &SearchingStateRoom{
+func MakeSearchingRoomState(time time.Time) SearchingRoomState {
+	return SearchingRoomState{
 		RoomState:      MakeRoomState(SEARCHING, time),
 		LastUpdateTime: time,
 	}
 }
 
-type ChattingStateRoom struct {
+func NewSearchingRoomState(time time.Time) *SearchingRoomState {
+	state := MakeSearchingRoomState(time)
+	return &state
+}
+
+// -----------------------------------------------------------------------
+
+type ChattingRoomState struct {
 	RoomState
 }
 
-type ChoosingStateRoom struct {
+func MakeChattingRoomState(time time.Time) ChattingRoomState {
+	return ChattingRoomState{
+		RoomState: MakeRoomState(CHATTING, time),
+	}
+}
+
+func MakeChattingRoomStateNow() ChattingRoomState {
+	return ChattingRoomState{
+		RoomState: MakeRoomState(CHATTING, time.Now()),
+	}
+}
+
+// -----------------------------------------------------------------------
+
+type ChoosingRoomState struct {
 	RoomState
-	ProfileIdAndMatchedIds map[string][]string // ?
+	ProfileIdAndMatchedIds map[string][]string
+}
+
+func MakeChoosingRoomState(time time.Time) ChattingRoomState {
+	return ChattingRoomState{
+		RoomState: MakeRoomState(CHOOSING, time),
+	}
 }

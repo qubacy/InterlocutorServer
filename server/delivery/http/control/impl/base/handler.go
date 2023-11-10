@@ -32,12 +32,12 @@ func NewHandler(
 
 func (self *Handler) Mux(pathStart string) *http.ServeMux {
 	serveMux := http.NewServeMux()
-	serveMux.HandleFunc(pathStart+"sign-in", self.SignIn)
+	serveMux.HandleFunc(pathStart+"sign-in", self.signIn)
 
 	// ***
 
-	serveMux.Handle(pathStart+"admin", NewAdminIdentity(self.tokenManager, self.Admin))
-	serveMux.Handle(pathStart+"topic", NewAdminIdentity(self.tokenManager, self.Topic))
+	serveMux.Handle(pathStart+"admin", NewAdminIdentity(self.tokenManager, self.admin))
+	serveMux.Handle(pathStart+"topic", NewAdminIdentity(self.tokenManager, self.topic))
 
 	return serveMux
 }
@@ -45,12 +45,12 @@ func (self *Handler) Mux(pathStart string) *http.ServeMux {
 // auth
 // -----------------------------------------------------------------------
 
-func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.durationProcess)
 	defer cancel()
 
 	defer r.Body.Close()
-	if r.Method == http.MethodPost {
+	if r.Method != http.MethodPost {
 		http.NotFound(w, r) // only at the highest level!
 		return
 	}
@@ -88,7 +88,7 @@ func (h *Handler) postSignIn(ctx context.Context, w http.ResponseWriter, r *http
 // admin
 // -----------------------------------------------------------------------
 
-func (h *Handler) Admin(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) admin(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.durationProcess)
 	defer cancel()
 
@@ -142,7 +142,7 @@ func (h *Handler) postAdmin(ctx context.Context, w http.ResponseWriter, r *http.
 // topic
 // -----------------------------------------------------------------------
 
-func (h *Handler) Topic(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) topic(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.durationProcess)
 	defer cancel()
 

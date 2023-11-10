@@ -26,7 +26,7 @@ type TopicService interface {
 	DeleteTopics(ctx context.Context) (dto.DeleteTopicsOutput, error)
 }
 
-type Services struct {
+type Services interface {
 	AuthService
 	AdminService
 	TopicService
