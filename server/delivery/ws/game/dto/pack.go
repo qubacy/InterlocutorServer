@@ -26,6 +26,15 @@ func MakeEmptyPack() Pack {
 	return Pack{}
 }
 
+func MakePackFromJson(data []byte) (Pack, error) {
+	pack := Pack{}
+	err := json.Unmarshal(data, &pack)
+	if err != nil {
+		return MakeEmptyPack(), utility.CreateCustomError(MakePackFromJson, err)
+	}
+	return pack, nil
+}
+
 func MakePackFromAnyBody(operation int, body interface{}) (Pack, error) {
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {

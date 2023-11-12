@@ -1,13 +1,14 @@
 package game
 
 import (
-	"encoding/json"
+	"fmt"
+	"ilserver/delivery/ws/game/connection"
 	"ilserver/delivery/ws/game/dto"
+	"ilserver/pkg/utility"
 	"ilserver/service/game"
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -18,7 +19,8 @@ type Handler struct {
 
 func NewHandler(gameService *game.Service) *Handler {
 	return &Handler{
-		gameService: gameService,
+		gameService:       gameService,
+		connectionStorage: NewStorage(),
 	}
 }
 
@@ -48,87 +50,61 @@ func (h *Handler) react(w http.ResponseWriter, r *http.Request) {
 
 // -----------------------------------------------------------------------
 
-func (h *Handler) SearchingStart(pack dto.Pack) {
-
+func (h *Handler) SearchingStart(conn *connection.Connection, pack dto.Pack) {
+	fmt.Println("SearchingStart")
 }
 
-func (h *Handler) SearchingStop() {
-
+func (h *Handler) SearchingStop(conn *connection.Connection, pack dto.Pack) {
+	fmt.Println("SearchingStop")
 }
 
-func (h *Handler) ChattingNewMessage() {
-
+func (h *Handler) ChattingNewMessage(conn *connection.Connection, pack dto.Pack) {
+	fmt.Println("ChattingNewMessage")
 }
 
-func (h *Handler) ChoosingUsersChosen() {
-
+func (h *Handler) ChoosingUsersChosen(conn *connection.Connection, pack dto.Pack) {
+	fmt.Println("ChoosingUsersChosen")
 }
 
 // private
 // -----------------------------------------------------------------------
 
 func (h *Handler) listen(conn *websocket.Conn) {
-	handler.AddConn(conn)
-
-	connectionId := uuid.NewString()
+	connObj := h.connectionStorage.AddOpenConnection(conn)
+	defer h.connectionStorage.RemoveConnection(connObj.Id())
 
 	for {
-		messageType, messageContent, err := conn.ReadMessage()
-		if err != nil {
-
+		select {
+		case msg := <-connObj.Reader():
+			h.route(connObj, msg)
+		case <-connObj.Closed().Done():
+			return
 		}
+	}
+}
 
-		// TODO: изучить закрытие веб-сокета
-		if err != nil {
-			switch err.(type) {
-			case *websocket.CloseError:
-				concreteErr := err.(*websocket.CloseError)
-				log.Printf("Unexpected read message, close err %v", concreteErr)
-			case *websocket.HandshakeError:
-				concreteErr := err.(*websocket.HandshakeError)
-				log.Printf("Unexpected read message, handshake err %v", concreteErr)
-			}
-			return handler.RemoveConnAndClose(conn)
-		}
+func (h *Handler) route(conn *connection.Connection, message connection.Message) {
+	pack, err := dto.MakePackFromJson(message.Data)
+	if err != nil {
+		log.Println(utility.CreateCustomError(h.route, err))
+		conn.CloseGracefully()
+	} else {
+		switch pack.Operation {
 
-		// ***
+		case dto.SEARCHING_START:
+			h.SearchingStart(conn, pack)
+		case dto.SEARCHING_STOP:
+			h.SearchingStop(conn, pack)
 
-		log.Println(string(messageContent))
-		log.Println(messageType)
+		case dto.CHATTING_NEW_MESSAGE:
+			h.ChattingNewMessage(conn, pack)
+		case dto.CHOOSING_USERS_CHOSEN:
+			h.ChoosingUsersChosen(conn, pack)
 
-		if messageType == websocket.CloseMessage {
-			return handler.RemoveConnAndClose(conn)
-		}
-
-		if messageType != websocket.TextMessage {
-			log.Println(conn.RemoteAddr(), "message type is not text")
-			return handler.RemoveConnAndClose(conn)
-		}
-
-		if err != nil {
-			log.Println(conn.RemoteAddr(), err)
-			return handler.RemoveConnAndClose(conn)
-		}
-
-		// ***
-
-		var pack overWsDto.Pack
-		err = json.Unmarshal(messageContent, &pack)
-		if err != nil {
-			log.Println(conn.RemoteAddr(), err)
-
-			// TODO: отправить пакет с информацией об ошибки
-
-			return handler.RemoveConnAndClose(conn)
-		}
-		log.Println(conn.RemoteAddr(), pack)
-
-		// ***
-
-		err = routeWsPack(handler, conn, pack)
-		if err != nil {
-			log.Println(conn.RemoteAddr(), err)
-			return handler.RemoveConnAndClose(conn)
+		default:
+			log.Println(utility.CreateCustomError(h.route,
+				ErrUnknownMessageOperation))
+			conn.CloseGracefully()
 		}
 	}
 }

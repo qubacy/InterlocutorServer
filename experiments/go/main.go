@@ -1,7 +1,9 @@
 package main
 
-import "exps/try_sqlite"
+import (
+	"exps/n2"
+)
 
 func main() {
-	try_sqlite.Exec()
+	n2.Exec()
 }

@@ -57,3 +57,10 @@ func Test_DirectCopyRoom_v1(t *testing.T) {
 	fmt.Println(baseRoom.State)
 	fmt.Println(copyRoom.State)
 }
+
+// experiments
+// -----------------------------------------------------------------------
+
+func Test_uuid_NewString(t *testing.T) {
+	fmt.Println(uuid.NewString())
+}

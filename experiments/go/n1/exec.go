@@ -1,4 +1,4 @@
-package try_sqlite
+package n1
 
 import (
 	"context"
@@ -134,19 +134,19 @@ func insertMultipleEntries3(db *sql.DB) {
 }
 
 func Exec() {
-	pathToDb := "./try_sqlite/storage"
+	pathToDatabaseCatalog := "./n1/storage"
 
 	// ***
 
-	if _, err := os.Stat(pathToDb); !errors.Is(err, os.ErrNotExist) {
-		err = os.RemoveAll(pathToDb)
+	if _, err := os.Stat(pathToDatabaseCatalog); !errors.Is(err, os.ErrNotExist) {
+		err = os.RemoveAll(pathToDatabaseCatalog)
 		if err != nil {
 			log.Fatalf("Exec, os.RemoveAll, err %v:", err)
 			return
 		}
 		fmt.Println("rm ok")
 	}
-	err := os.Mkdir(pathToDb, os.ModePerm)
+	err := os.Mkdir(pathToDatabaseCatalog, os.ModePerm)
 	if err != nil {
 		log.Fatalf("Exec, os.Mkdir, err %v:", err)
 		return
@@ -161,7 +161,7 @@ func Exec() {
 			"    Name TEXT " +
 			"); "
 
-	db, err := sql.Open("sqlite3", pathToDb+"/topics.db")
+	db, err := sql.Open("sqlite3", pathToDatabaseCatalog+"/topics.db")
 	if err != nil {
 		log.Fatalf("Exec, sql.Open, err %v:", err)
 		return
