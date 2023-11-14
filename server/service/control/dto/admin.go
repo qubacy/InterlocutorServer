@@ -21,7 +21,7 @@ type GetAdminsOutput struct {
 }
 
 // ---> 200
-func MakeGetAdminsSuccess(admins domain.AdminList) GetAdminsOutput {
+func MakeGetAdminsOutputSuccess(admins domain.AdminList) GetAdminsOutput {
 	result := GetAdminsOutput{}
 	for i := range admins {
 		result.Admins = append(result.Admins,
@@ -31,7 +31,7 @@ func MakeGetAdminsSuccess(admins domain.AdminList) GetAdminsOutput {
 }
 
 // ---> 400
-func MakeGetAdminsEmpty() GetAdminsOutput {
+func MakeGetAdminsOutputEmpty() GetAdminsOutput {
 	return GetAdminsOutput{}
 }
 
@@ -46,22 +46,22 @@ type PostAdminOutput struct {
 	Idr int64
 }
 
-func PostAdminInputToDomain(inp PostAdminInput) domain.Admin {
+func (self *PostAdminInput) ToDomain() domain.Admin {
 	return domain.Admin{
-		Login: inp.Login,
-		Pass:  inp.Pass,
+		Login: self.Login,
+		Pass:  self.Pass,
 	}
 }
 
 // ---> 200
-func MakePostAdminSuccess(idr int64) PostAdminOutput {
+func MakePostAdminOutputSuccess(idr int64) PostAdminOutput {
 	return PostAdminOutput{
 		Idr: idr,
 	}
 }
 
 // ---> 400
-func MakePostAdminEmpty() PostAdminOutput {
+func MakePostAdminOutputEmpty() PostAdminOutput {
 	return PostAdminOutput{}
 }
 
@@ -71,11 +71,11 @@ type DeleteAdminByIdrOutput struct {
 }
 
 // ---> 200
-func MakeDeleteAdminByIdrSuccess() DeleteAdminByIdrOutput {
+func MakeDeleteAdminByIdrOutputSuccess() DeleteAdminByIdrOutput {
 	return DeleteAdminByIdrOutput{}
 }
 
 // ---> 400
-func MakeDeleteAdminByIdrEmpty() DeleteAdminByIdrOutput {
+func MakeDeleteAdminByIdrOutputEmpty() DeleteAdminByIdrOutput {
 	return DeleteAdminByIdrOutput{}
 }

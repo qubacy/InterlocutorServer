@@ -49,3 +49,31 @@ func Test_map_getElement(t *testing.T) {
 		fmt.Printf("value not found by key `%v`\n", key)
 	}
 }
+
+func Test_cutDataToSize(t *testing.T) {
+	testCases := []struct {
+		data string
+		size int
+
+		expected string
+	}{
+		{"some long string", 5, "some "},
+		{"some long string", 0, ""},
+		{"some long string", 500, "some long string"},
+		{"some long string", 1, "s"},
+		{"some long string", -1, ""},
+		{"some long string", -100, ""},
+	}
+
+	for i := range testCases {
+		result := cutDataToSize([]byte(testCases[i].data), testCases[i].size)
+		if string(result) != testCases[i].expected {
+			t.Error("Is there something wrong")
+		}
+	}
+}
+
+func Test_stringFromNil(t *testing.T) {
+	var data []byte = nil
+	fmt.Printf("'%v'\n", string(data))
+}

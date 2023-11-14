@@ -19,10 +19,20 @@ func NewStorage() *Storage {
 	}
 }
 
+var once = sync.Once{}
+var instance *Storage = nil
+
+func Instance() *Storage {
+	once.Do(func() {
+		instance = NewStorage()
+	})
+	return instance
+}
+
 // public
 // -----------------------------------------------------------------------
 
-func (s *Storage) Rooms() []domain.Room {
+func (s *Storage) Rooms() domain.RoomList {
 	s.rwMutex.RLock()
 	defer s.rwMutex.RUnlock()
 

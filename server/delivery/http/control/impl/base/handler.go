@@ -39,6 +39,10 @@ func (self *Handler) Mux(pathStart string) *http.ServeMux {
 	serveMux.Handle(pathStart+"admin", NewAdminIdentity(self.tokenManager, self.admin))
 	serveMux.Handle(pathStart+"topic", NewAdminIdentity(self.tokenManager, self.topic))
 
+	// *** work with game context.
+
+	serveMux.Handle(pathStart+"game/room", NewAdminIdentity(self.tokenManager, self.topic))
+
 	return serveMux
 }
 
@@ -188,4 +192,25 @@ func (h *Handler) postTopic(ctx context.Context, w http.ResponseWriter, r *http.
 	}
 
 	writeOk(w)
+}
+
+// game/room
+// -----------------------------------------------------------------------
+
+func (h *Handler) gameRoom(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), h.durationProcess)
+	defer cancel()
+
+	defer r.Body.Close()
+	if r.Method == http.MethodGet {
+		h.getGameRoom(ctx, w, r)
+	} else {
+		http.NotFound(w, r)
+	}
+}
+
+func (h *Handler) getGameRoom(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	io.Copy(io.Discard, r.Body)
+
+	// TODO:
 }

@@ -9,14 +9,14 @@ type GetTopicsOutput struct {
 }
 
 // ---> 200
-func MakeGetTopicsSuccess(topics domain.TopicList) GetTopicsOutput {
+func MakeGetTopicsOutputSuccess(topics domain.TopicList) GetTopicsOutput {
 	return GetTopicsOutput{
 		Topics: topics,
 	}
 }
 
 // ---> 400
-func MakeGetTopicsEmpty() GetTopicsOutput {
+func MakeGetTopicsOutputEmpty() GetTopicsOutput {
 	return GetTopicsOutput{}
 }
 
@@ -27,14 +27,14 @@ type GetRandomTopicOutput struct {
 }
 
 // ---> 200
-func MakeGetRandomTopicSuccess(topic domain.Topic) GetRandomTopicOutput {
+func MakeGetRandomTopicOutputSuccess(topic domain.Topic) GetRandomTopicOutput {
 	return GetRandomTopicOutput{
 		Topic: topic,
 	}
 }
 
 // ---> 400
-func MakeGetRandomTopicEmpty() GetRandomTopicOutput {
+func MakeGetRandomTopicOutputEmpty() GetRandomTopicOutput {
 	return GetRandomTopicOutput{}
 }
 

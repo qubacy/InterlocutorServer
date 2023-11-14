@@ -26,8 +26,13 @@ type TopicService interface {
 	DeleteTopics(ctx context.Context) (dto.DeleteTopicsOutput, error)
 }
 
+type RoomService interface {
+	GetRooms(ctx context.Context) (dto.GetRoomsOutput, error)
+}
+
 type Services interface {
 	AuthService
 	AdminService
 	TopicService
+	RoomService
 }

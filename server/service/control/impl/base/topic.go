@@ -26,23 +26,23 @@ func (s *TopicService) GetTopics(ctx context.Context) (dto.GetTopicsOutput, erro
 	topics, err := s.storage.AllTopics(ctx)
 	if err != nil {
 		// ---> 400
-		return dto.MakeGetTopicsEmpty(),
+		return dto.MakeGetTopicsOutputEmpty(),
 			utility.CreateCustomError(s.GetTopics, err)
 	}
 
 	// ---> 200
-	return dto.MakeGetTopicsSuccess(topics), nil
+	return dto.MakeGetTopicsOutputSuccess(topics), nil
 }
 
 func (s *TopicService) GetRandomTopic(ctx context.Context, language int) (dto.GetRandomTopicOutput, error) {
 	topic, err := s.storage.RandomTopic(ctx, language)
 	if err != nil {
 		// ---> 400
-		return dto.MakeGetRandomTopicEmpty(),
+		return dto.MakeGetRandomTopicOutputEmpty(),
 			utility.CreateCustomError(s.GetRandomTopic, err)
 	}
 
-	return dto.MakeGetRandomTopicSuccess(topic), nil
+	return dto.MakeGetRandomTopicOutputSuccess(topic), nil
 }
 
 // insert

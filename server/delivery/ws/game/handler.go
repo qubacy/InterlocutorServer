@@ -6,7 +6,6 @@ import (
 	"ilserver/delivery/ws/game/dto"
 	"ilserver/pkg/utility"
 	"ilserver/service/game"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -50,12 +49,34 @@ func (h *Handler) react(w http.ResponseWriter, r *http.Request) {
 
 // -----------------------------------------------------------------------
 
+// can also pass key-value storage!
 func (h *Handler) SearchingStart(conn *connection.Connection, pack dto.Pack) {
-	fmt.Println("SearchingStart")
+	cliBody, err := pack.AsCliSearchingStartBody()
+	if err != nil {
+		closeGracefully(conn, h.SearchingStart, err)
+		return
+	}
+
+	svrBody, err := h.gameService.SearchingStart(conn.Id(), cliBody)
+	if err != nil {
+		// TODO: convert to sending error code!?
+		closeGracefully(conn, h.SearchingStart, err)
+		return
+	}
+
+	jsonBytes, err := dto.MakePackAsJsonBytes(dto.SEARCHING_START, svrBody)
+	if err != nil {
+		closeGracefully(conn, h.SearchingStart, err)
+		return
+	}
+
+	// ***
+
+	conn.Writer() <- connection.MakeTextMessage(jsonBytes)
 }
 
 func (h *Handler) SearchingStop(conn *connection.Connection, pack dto.Pack) {
-	fmt.Println("SearchingStop")
+
 }
 
 func (h *Handler) ChattingNewMessage(conn *connection.Connection, pack dto.Pack) {
@@ -78,6 +99,7 @@ func (h *Handler) listen(conn *websocket.Conn) {
 		case msg := <-connObj.Reader():
 			h.route(connObj, msg)
 		case <-connObj.Closed().Done():
+
 			return
 		}
 	}
@@ -86,8 +108,7 @@ func (h *Handler) listen(conn *websocket.Conn) {
 func (h *Handler) route(conn *connection.Connection, message connection.Message) {
 	pack, err := dto.MakePackFromJson(message.Data)
 	if err != nil {
-		log.Println(utility.CreateCustomError(h.route, err))
-		conn.CloseGracefully()
+		closeGracefully(conn, h.route, err)
 	} else {
 		switch pack.Operation {
 
@@ -102,9 +123,20 @@ func (h *Handler) route(conn *connection.Connection, message connection.Message)
 			h.ChoosingUsersChosen(conn, pack)
 
 		default:
-			log.Println(utility.CreateCustomError(h.route,
-				ErrUnknownMessageOperation))
-			conn.CloseGracefully()
+			closeGracefully(conn, h.route,
+				ErrUnknownMessageOperation)
 		}
 	}
+}
+
+// hidden functions
+// -----------------------------------------------------------------------
+
+func closeGracefully(
+	conn *connection.Connection,
+	i interface{}, err error,
+) {
+	err = utility.CreateCustomError(i, err)
+	err = utility.UnwrapErrorsToLast(err) // since the control message is limited!
+	conn.CloseGracefully(err.Error())
 }

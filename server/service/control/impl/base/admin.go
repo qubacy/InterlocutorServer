@@ -25,47 +25,47 @@ func (s *AdminService) GetAdmins(ctx context.Context) (dto.GetAdminsOutput, erro
 	admins, err := s.storage.AllAdmins(ctx)
 	if err != nil {
 		// ---> 400
-		return dto.MakeGetAdminsEmpty(),
+		return dto.MakeGetAdminsOutputEmpty(),
 			utility.CreateCustomError(s.GetAdmins, err)
 	}
 
 	// ---> 200
-	return dto.MakeGetAdminsSuccess(admins), nil
+	return dto.MakeGetAdminsOutputSuccess(admins), nil
 }
 
 func (s *AdminService) PostAdmin(ctx context.Context, inp dto.PostAdminInput) (dto.PostAdminOutput, error) {
 	if !isValidPostAdminInput(inp) {
 		// ---> 400
-		return dto.MakePostAdminEmpty(),
+		return dto.MakePostAdminOutputEmpty(),
 			utility.CreateCustomError(s.PostAdmin,
 				control.ErrInputDtoIsInvalid())
 	}
 
 	// ***
 
-	idr, err := s.storage.InsertAdmin(ctx, dto.PostAdminInputToDomain(inp))
+	idr, err := s.storage.InsertAdmin(ctx, inp.ToDomain())
 	if err != nil {
 		// ---> 400
-		return dto.MakePostAdminEmpty(),
+		return dto.MakePostAdminOutputEmpty(),
 			utility.CreateCustomError(s.PostAdmin, err)
 	}
 
 	// ***
 
 	// ---> 200
-	return dto.MakePostAdminSuccess(idr), nil
+	return dto.MakePostAdminOutputSuccess(idr), nil
 }
 
 func (s *AdminService) DeleteAdminByIdr(ctx context.Context, idr int) (dto.DeleteAdminByIdrOutput, error) {
 	err := s.storage.DeleteAdmin(ctx, idr)
 	if err != nil {
 		// ---> 400
-		return dto.MakeDeleteAdminByIdrEmpty(),
+		return dto.MakeDeleteAdminByIdrOutputEmpty(),
 			utility.CreateCustomError(s.DeleteAdminByIdr, err)
 	}
 
 	// ---> 200
-	return dto.MakeDeleteAdminByIdrSuccess(), nil
+	return dto.MakeDeleteAdminByIdrOutputSuccess(), nil
 }
 
 // private

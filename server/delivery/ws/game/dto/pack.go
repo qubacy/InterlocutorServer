@@ -3,6 +3,7 @@ package dto
 import (
 	"encoding/json"
 	"ilserver/pkg/utility"
+	serviceDto "ilserver/service/game/dto"
 )
 
 type KeyValueStorage map[string]interface{}
@@ -62,7 +63,7 @@ func MakePackAsJsonBytes(operation int, body interface{}) ([]byte, error) {
 	return pack.ToJsonBytes()
 }
 
-// methods
+// converter
 // -----------------------------------------------------------------------
 
 func (self *Pack) ToJsonBytes() ([]byte, error) {
@@ -73,4 +74,66 @@ func (self *Pack) ToJsonBytes() ([]byte, error) {
 	}
 
 	return bytes, nil
+}
+
+func (self *Pack) BodyToJsonBytes() ([]byte, error) {
+	bytes, err := json.Marshal(self.RawBody)
+	if err != nil {
+		return []byte{},
+			utility.CreateCustomError(self.BodyToJsonBytes, err)
+	}
+
+	return bytes, nil
+}
+
+// to concrete body
+// -----------------------------------------------------------------------
+
+func (self *Pack) AsCliSearchingStartBody() (
+	serviceDto.CliSearchingStartBody, error,
+) {
+	data, err := self.BodyToJsonBytes()
+	if err != nil {
+		return serviceDto.CliSearchingStartBody{},
+			utility.CreateCustomError(self.AsCliSearchingStartBody, err)
+	}
+
+	// error ignores one level!
+	return serviceDto.MakeCliSearchingStartBodyFromJson(data)
+}
+
+func (self *Pack) AsCliSearchingStopBody() (
+	serviceDto.CliSearchingStopBody, error,
+) {
+	data, err := self.BodyToJsonBytes()
+	if err != nil {
+		return serviceDto.CliSearchingStopBody{},
+			utility.CreateCustomError(self.AsCliSearchingStopBody, err)
+	}
+
+	return serviceDto.MakeCliSearchingStopBodyFromJson(data)
+}
+
+func (self *Pack) AsCliChattingNewMessageBody() (
+	serviceDto.CliChattingNewMessageBody, error,
+) {
+	data, err := self.BodyToJsonBytes()
+	if err != nil {
+		return serviceDto.MakeCliChattingNewMessageBodyEmpty(),
+			utility.CreateCustomError(self.AsCliChattingNewMessageBody, err)
+	}
+
+	return serviceDto.MakeCliChattingNewMessageBodyFromJson(data)
+}
+
+func (self *Pack) AsCliChoosingUsersChosenBody() (
+	serviceDto.CliChoosingUsersChosenBody, error,
+) {
+	data, err := self.BodyToJsonBytes()
+	if err != nil {
+		return serviceDto.MakeCliChoosingUsersChosenBodyEmpty(),
+			utility.CreateCustomError(self.AsCliChoosingUsersChosenBody, err)
+	}
+
+	return serviceDto.MakeCliChoosingUsersChosenBodyFromJson(data)
 }

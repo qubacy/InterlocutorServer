@@ -19,7 +19,7 @@ func runGameServer() (string, *http.ServeMux) {
 
 	gameHandler := delivery.NewHandler(
 		service.NewService(
-			gameStorage.NewStorage(),
+			gameStorage.Instance(),
 			controlStorageObj,
 		),
 	)

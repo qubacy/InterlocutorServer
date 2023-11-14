@@ -5,6 +5,7 @@ import (
 	token "ilserver/pkg/token/impl"
 	service "ilserver/service/control/impl/base"
 	storage "ilserver/storage/control/impl/sql/sqlite"
+	gameStorage "ilserver/storage/game"
 	"log"
 	"net/http"
 
@@ -30,6 +31,7 @@ func runControlServer() (string, *http.ServeMux) {
 		AccessTokenTTL: viper.GetDuration("control_server.token.duration"),
 		TokenManager:   tokenManager,
 		Storage:        controlStorage,
+		GameStorage:    gameStorage.Instance(),
 	}
 
 	controlHandler := delivery.NewHandler(

@@ -44,6 +44,7 @@ func (self *PostTopicDto) ToDomain() domain.Topic {
 	}
 }
 
+// req/res
 // -----------------------------------------------------------------------
 
 type GetTopicReq struct{}

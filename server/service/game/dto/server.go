@@ -13,10 +13,6 @@ type MatchedUser struct {
 	Contact string `json:"contact"`
 }
 
-type Err struct {
-	Id int `json:"id"`
-}
-
 type ProfilePublic struct {
 	Id       int    `json:"id"`
 	Username string `json:"username"`
@@ -37,6 +33,10 @@ type FoundGameData struct {
 
 type SvrSearchingStartBody struct{}
 
+func MakeSvrSearchingStartBodyEmpty() SvrSearchingStartBody {
+	return SvrSearchingStartBody{}
+}
+
 type SvrSearchingGameFoundBody struct {
 	FoundGameData FoundGameData `json:"foundGameData"`
 }
@@ -50,11 +50,4 @@ type SvrChoosingUsersChosenBody struct{}
 
 type SvrChoosingStageIsOverBody struct {
 	MatchedUsers []MatchedUser `json:"matchedUsers"`
-}
-
-// ***
-
-// TODO: переделать в код ошибки (?)
-type SvrErrBody struct {
-	Err Err `json:"error"`
 }

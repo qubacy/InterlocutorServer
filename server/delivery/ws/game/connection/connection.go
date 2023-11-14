@@ -66,14 +66,15 @@ func (c *Connection) Closed() context.Context {
 
 // -----------------------------------------------------------------------
 
-func (c *Connection) CloseGracefully() {
+func (c *Connection) CloseGracefully(reason string) {
+	log.Println("call close gracefully")
+
 	if c.IsClosed() {
 		return
 	}
 
 	defer c.closeAll()
-
-	c.writeCloseMessage()
+	c.writeCloseMessage(reason)
 
 	// server -----> client
 	// ..close connection..
@@ -95,8 +96,12 @@ func (c *Connection) IsClosed() bool {
 func (c *Connection) closer(code int, text string) error {
 	log.Println("call close handler")
 
+	if c.IsClosed() {
+		return nil
+	}
+
 	defer c.closeAll()
-	c.writeCloseMessage()
+	c.writeCloseMessage("")
 
 	// server <----- client
 	// server -----> client
@@ -154,22 +159,42 @@ func (c *Connection) closeAll() {
 	if c.IsClosed() {
 		return
 	}
-
 	c.cancel()
+
+	close(c.readingChan)
+	close(c.writingChan)
 	c.webSocket.Close() // ignore err.
 }
 
-func (c *Connection) writeCloseMessage() {
+func (c *Connection) writeCloseMessage(reason string) {
 	deadline := time.Now().Add(time.Second)
 	data := websocket.FormatCloseMessage(
-		websocket.CloseNormalClosure, "")
+		websocket.CloseNormalClosure, reason)
 
 	// The Close and WriteControl methods
 	// can be called concurrently with all other methods.
 
+	data = cutDataToSize(data, 122)
+	data = append(data, []byte("...")...) // Mmm!
 	err := c.webSocket.WriteControl(websocket.CloseMessage, data, deadline)
 
 	if err != nil {
 		log.Println(utility.CreateCustomError(c.writeCloseMessage, err))
+		return
+	} else {
+		log.Println("control message sent successfully")
 	}
+}
+
+// hidden functions
+// -----------------------------------------------------------------------
+
+func cutDataToSize(data []byte, size int) []byte {
+	if size < 0 {
+		return []byte{}
+	}
+	if len(data) <= size {
+		return data
+	}
+	return data[:size]
 }
