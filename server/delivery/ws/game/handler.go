@@ -53,20 +53,20 @@ func (h *Handler) react(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) SearchingStart(conn *connection.Connection, pack dto.Pack) {
 	cliBody, err := pack.AsCliSearchingStartBody()
 	if err != nil {
-		closeGracefully(conn, h.SearchingStart, err)
+		h.closeGracefullyWithError(conn, h.SearchingStart, err)
 		return
 	}
 
 	svrBody, err := h.gameService.SearchingStart(conn.Id(), cliBody)
 	if err != nil {
 		// TODO: convert to sending error code!?
-		closeGracefully(conn, h.SearchingStart, err)
+		h.closeGracefullyWithError(conn, h.SearchingStart, err)
 		return
 	}
 
 	jsonBytes, err := dto.MakePackAsJsonBytes(dto.SEARCHING_START, svrBody)
 	if err != nil {
-		closeGracefully(conn, h.SearchingStart, err)
+		h.closeGracefullyWithError(conn, h.SearchingStart, err)
 		return
 	}
 
@@ -76,11 +76,44 @@ func (h *Handler) SearchingStart(conn *connection.Connection, pack dto.Pack) {
 }
 
 func (h *Handler) SearchingStop(conn *connection.Connection, pack dto.Pack) {
+	cliBody, err := pack.AsCliSearchingStopBody()
+	if err != nil {
+		h.closeGracefullyWithError(conn, h.SearchingStop, err)
+		return
+	}
 
+	err = h.gameService.SearchingStop(conn.Id(), cliBody)
+	if err != nil {
+		h.closeGracefullyWithError(conn, h.SearchingStop, err)
+		return
+	}
+
+	h.closeGracefully(conn)
 }
 
 func (h *Handler) ChattingNewMessage(conn *connection.Connection, pack dto.Pack) {
-	fmt.Println("ChattingNewMessage")
+	cliBody, err := pack.AsCliChattingNewMessageBody()
+	if err != nil {
+		h.closeGracefullyWithError(conn, h.ChattingNewMessage, err)
+		return
+	}
+
+	svrBody, err := h.gameService.ChattingNewMessage(conn.Id(), cliBody)
+	if err != nil {
+		h.closeGracefullyWithError(conn, h.ChattingNewMessage, err)
+		return
+	}
+
+	jsonBytes, err := dto.MakePackAsJsonBytes(dto.CHATTING_NEW_MESSAGE, svrBody)
+	if err != nil {
+		h.closeGracefullyWithError(conn, h.ChattingNewMessage, err)
+		return
+	}
+
+	// ***
+
+	// message to myself...
+	conn.Writer() <- connection.MakeTextMessage(jsonBytes)
 }
 
 func (h *Handler) ChoosingUsersChosen(conn *connection.Connection, pack dto.Pack) {
@@ -99,7 +132,7 @@ func (h *Handler) listen(conn *websocket.Conn) {
 		case msg := <-connObj.Reader():
 			h.route(connObj, msg)
 		case <-connObj.Closed().Done():
-
+			h.gameService.ProfileLeftGame(connObj.Id())
 			return
 		}
 	}
@@ -108,7 +141,7 @@ func (h *Handler) listen(conn *websocket.Conn) {
 func (h *Handler) route(conn *connection.Connection, message connection.Message) {
 	pack, err := dto.MakePackFromJson(message.Data)
 	if err != nil {
-		closeGracefully(conn, h.route, err)
+		h.closeGracefullyWithError(conn, h.route, err)
 	} else {
 		switch pack.Operation {
 
@@ -123,7 +156,7 @@ func (h *Handler) route(conn *connection.Connection, message connection.Message)
 			h.ChoosingUsersChosen(conn, pack)
 
 		default:
-			closeGracefully(conn, h.route,
+			h.closeGracefullyWithError(conn, h.route,
 				ErrUnknownMessageOperation)
 		}
 	}
@@ -132,7 +165,11 @@ func (h *Handler) route(conn *connection.Connection, message connection.Message)
 // hidden functions
 // -----------------------------------------------------------------------
 
-func closeGracefully(
+func (h *Handler) closeGracefully(conn *connection.Connection) {
+	conn.CloseGracefully("")
+}
+
+func (h *Handler) closeGracefullyWithError(
 	conn *connection.Connection,
 	i interface{}, err error,
 ) {

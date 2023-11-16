@@ -70,20 +70,23 @@ func MakeChattingRoomState(time time.Time) ChattingRoomState {
 }
 
 func MakeChattingRoomStateNow() ChattingRoomState {
-	return ChattingRoomState{
-		RoomState: MakeRoomState(CHATTING, time.Now()),
-	}
+	return MakeChattingRoomState(time.Now())
 }
 
 // -----------------------------------------------------------------------
 
 type ChoosingRoomState struct {
 	RoomState
-	ProfileIdAndMatchedIds map[string][]string
+	MatchedProfileIdsForProfile map[string][]string
 }
 
-func MakeChoosingRoomState(time time.Time) ChattingRoomState {
-	return ChattingRoomState{
-		RoomState: MakeRoomState(CHOOSING, time),
+func MakeChoosingRoomState(time time.Time) ChoosingRoomState {
+	return ChoosingRoomState{
+		RoomState:                   MakeRoomState(CHOOSING, time),
+		MatchedProfileIdsForProfile: make(map[string][]string),
 	}
+}
+
+func MakeChoosingRoomStateNow() ChoosingRoomState {
+	return MakeChoosingRoomState(time.Now())
 }

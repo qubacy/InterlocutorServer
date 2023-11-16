@@ -64,3 +64,22 @@ func Test_DirectCopyRoom_v1(t *testing.T) {
 func Test_uuid_NewString(t *testing.T) {
 	fmt.Println(uuid.NewString())
 }
+
+func Test_interface(t *testing.T) {
+	var value interface{} = ChattingRoomState{}
+	state, converted := value.(ChattingRoomState)
+	fmt.Println(state, converted)
+
+	value = nil
+	state, converted = value.(ChattingRoomState)
+	fmt.Println(state, converted)
+
+	// ***
+
+	switch value.(type) {
+	case ChattingRoomState:
+		fmt.Println("value is instance of ChattingRoomState")
+	case nil:
+		fmt.Println("value is nil")
+	}
+}

@@ -1,11 +1,23 @@
 package dto
 
+import (
+	domain "ilserver/domain/memory"
+	"time"
+)
+
 // parts
 // -----------------------------------------------------------------------
 
 type SvrMessage struct {
 	SenderId int    `json:"senderId"`
 	Text     string `json:"text"`
+}
+
+func MakeSvrMessage(senderId int, text string) SvrMessage {
+	return SvrMessage{
+		SenderId: senderId,
+		Text:     text,
+	}
 }
 
 type MatchedUser struct {
@@ -18,6 +30,17 @@ type ProfilePublic struct {
 	Username string `json:"username"`
 }
 
+func MakeProfilePublic(id int, username string) ProfilePublic {
+	return ProfilePublic{
+		Id:       id, // <--- profile local id (index in array)
+		Username: username,
+	}
+}
+
+func MakeProfilePublicList() []ProfilePublic {
+	return []ProfilePublic{}
+}
+
 type FoundGameData struct {
 	LocalProfileId        int    `json:"localProfileId"`
 	StartSessionTime      int64  `json:"startSessionTime"`
@@ -26,6 +49,37 @@ type FoundGameData struct {
 	ChattingTopic         string `json:"chattingTopic"`
 
 	ProfilePublicList []ProfilePublic `json:"profilePublicList"`
+}
+
+func MakeFoundGameData(localProfileId int,
+	chattingStageDuration time.Duration,
+	choosingStageDuration time.Duration,
+	topicName string,
+) FoundGameData {
+	return FoundGameData{
+		LocalProfileId: localProfileId,
+
+		StartSessionTime:      time.Now().Unix(),                    // <--- seconds
+		ChattingStageDuration: chattingStageDuration.Milliseconds(), // <--- ms, strange...
+		ChoosingStageDuration: choosingStageDuration.Milliseconds(),
+
+		ChattingTopic:     topicName,
+		ProfilePublicList: MakeProfilePublicList(),
+	}
+}
+
+func (self *FoundGameData) AddProfiles(profiles domain.ProfileList) {
+	for i := range profiles {
+		self.AddProfilePublic(
+			MakeProfilePublic(
+				i, profiles[i].Username,
+			),
+		)
+	}
+}
+
+func (self *FoundGameData) AddProfilePublic(value ProfilePublic) {
+	self.ProfilePublicList = append(self.ProfilePublicList, value)
 }
 
 // svr - server
@@ -37,13 +91,35 @@ func MakeSvrSearchingStartBodyEmpty() SvrSearchingStartBody {
 	return SvrSearchingStartBody{}
 }
 
+// -----------------------------------------------------------------------
+
 type SvrSearchingGameFoundBody struct {
 	FoundGameData FoundGameData `json:"foundGameData"`
 }
 
+func MakeSvrSearchingGameFoundBody(foundGameData FoundGameData) SvrSearchingGameFoundBody {
+	return SvrSearchingGameFoundBody{
+		FoundGameData: foundGameData,
+	}
+}
+
+// -----------------------------------------------------------------------
+
 type SvrChattingNewMessageBody struct {
 	Message SvrMessage `json:"message"`
 }
+
+func MakeSvrChattingNewMessageBodyFromParts(senderId int, text string) SvrChattingNewMessageBody {
+	return SvrChattingNewMessageBody{
+		Message: MakeSvrMessage(senderId, text),
+	}
+}
+
+func MakeSvrChattingNewMessageBodyEmpty() SvrChattingNewMessageBody {
+	return SvrChattingNewMessageBody{}
+}
+
+// -----------------------------------------------------------------------
 
 type SvrChattingStageIsOverBody struct{}
 type SvrChoosingUsersChosenBody struct{}

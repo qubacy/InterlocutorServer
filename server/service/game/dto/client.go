@@ -15,6 +15,14 @@ type Profile struct {
 	Language int    `json:"language"`
 }
 
+func (self *Profile) ToDomain(id string) domain.Profile {
+	return domain.Profile{
+		Id:       id,
+		Username: self.Username,
+		Contact:  self.Contact,
+	}
+}
+
 type CliMessage struct {
 	Text string `json:"text"`
 }
@@ -84,7 +92,7 @@ func MakeCliChattingNewMessageBodyEmpty() CliChattingNewMessageBody {
 // -----------------------------------------------------------------------
 
 type CliChoosingUsersChosenBody struct {
-	UserIdList []int `json:"userIdList"`
+	UserIdList []int `json:"userIdList"` // local ids!
 }
 
 func MakeCliChoosingUsersChosenBodyFromJson(data []byte) (
@@ -113,16 +121,4 @@ func (dto *CliSearchingStartBody) IsValid() bool {
 
 func (dto *CliChattingNewMessageBody) IsValid() bool {
 	return dto.Message.Text != ""
-}
-
-// adapter
-// -----------------------------------------------------------------------
-
-func MakeProfileFromReqDto(id string, dto CliSearchingStartBody) domain.Profile {
-	return domain.Profile{
-		Id: id,
-
-		Username: dto.Profile.Username,
-		Contact:  dto.Profile.Contact,
-	}
 }

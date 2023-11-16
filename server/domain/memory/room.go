@@ -34,3 +34,15 @@ func (self *Room) RemoveProfile(index int) {
 		self.Profiles[index+1:]...,
 	)
 }
+
+func (self *Room) StateName() (StateName, bool) {
+	switch self.State.(type) {
+	case SearchingRoomState:
+		return SEARCHING, true
+	case ChattingRoomState:
+		return CHATTING, true
+	case ChoosingRoomState:
+		return CHOOSING, true
+	}
+	return 0, false
+}

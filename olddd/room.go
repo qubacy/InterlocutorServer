@@ -69,6 +69,26 @@ func (rs *RoomService) AvailableRoomWithSearchingState(lang int) (bool, *domain.
 	return false, nil
 }
 
+// func (s *Service) BackgroundUpdateRooms() {
+// 	go func() {
+// 		for {
+// 			select {
+// 			case msg := <-h.RoomService.UpdateRoomMsgs:
+// 				c := h.ProfileIdAndConn[msg.ProfileId]
+// 				c.WriteMessage(websocket.TextMessage, msg.BytesResDto)
+// 			}
+// 		}
+// 	}()
+// 	go func() {
+// 		for {
+// 			select {
+// 			case <-time.After(viper.GetDuration("update_rooms.timeout")):
+// 				h.RoomService.BackgroundUpdateRoomsTick()
+// 			}
+// 		}
+// 	}()
+// }
+
 func (rs *RoomService) AddRoomWithSearchingState(lang int) {
 	currentTime := time.Now()
 	one := domain.Room{

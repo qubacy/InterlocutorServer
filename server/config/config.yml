@@ -14,7 +14,7 @@ found_game:
   choosing_stage_duration: 15s
 
 background:
-  update_rooms:
+  update_room:
     with_searching_state:
       interval_from_last_update_to_next_state: 10s
 
