@@ -32,6 +32,7 @@ func (s *Service) SearchingStart(profileId string, body dto.CliSearchingStartBod
 	}
 
 	s.gameStorage.InsertRoomWithSearchingState(body.Profile.Language)
+	// TODO:
 
 	return dto.SvrSearchingStartBody{}, nil
 }

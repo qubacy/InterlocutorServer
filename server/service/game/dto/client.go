@@ -12,7 +12,7 @@ import (
 type Profile struct {
 	Username string `json:"username"`
 	Contact  string `json:"contact"`
-	Language int    `json:"lang"`
+	Language int    `json:"language"`
 }
 
 type CliMessage struct {

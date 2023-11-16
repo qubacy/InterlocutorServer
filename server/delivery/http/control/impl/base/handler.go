@@ -39,9 +39,9 @@ func (self *Handler) Mux(pathStart string) *http.ServeMux {
 	serveMux.Handle(pathStart+"admin", NewAdminIdentity(self.tokenManager, self.admin))
 	serveMux.Handle(pathStart+"topic", NewAdminIdentity(self.tokenManager, self.topic))
 
-	// *** work with game context.
+	// *** work with game context. Correctly move to another place
 
-	serveMux.Handle(pathStart+"game/room", NewAdminIdentity(self.tokenManager, self.topic))
+	serveMux.Handle(pathStart+"room", NewAdminIdentity(self.tokenManager, self.room))
 
 	return serveMux
 }
@@ -194,23 +194,29 @@ func (h *Handler) postTopic(ctx context.Context, w http.ResponseWriter, r *http.
 	writeOk(w)
 }
 
-// game/room
+// game
 // -----------------------------------------------------------------------
 
-func (h *Handler) gameRoom(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) room(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.durationProcess)
 	defer cancel()
 
 	defer r.Body.Close()
 	if r.Method == http.MethodGet {
-		h.getGameRoom(ctx, w, r)
+		h.getRoom(ctx, w, r)
 	} else {
 		http.NotFound(w, r)
 	}
 }
 
-func (h *Handler) getGameRoom(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getRoom(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	io.Copy(io.Discard, r.Body)
 
-	// TODO:
+	serviceOut, err := h.services.GetRooms(ctx)
+	if err != nil {
+		writeRawError(w, err)
+		return
+	}
+
+	writeJsonOk(w, dto.MakeGetRoomRes(serviceOut.Rooms))
 }
