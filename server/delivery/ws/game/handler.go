@@ -6,6 +6,8 @@ import (
 	"ilserver/delivery/ws/game/dto"
 	"ilserver/pkg/utility"
 	"ilserver/service/game"
+	serviceDto "ilserver/service/game/dto"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -17,10 +19,15 @@ type Handler struct {
 }
 
 func NewHandler(gameService *game.Service) *Handler {
-	return &Handler{
+	instance := &Handler{
 		gameService:       gameService,
 		connectionStorage: NewStorage(),
 	}
+
+	go instance.processAsyncResponses()
+	go instance.processAsyncErrors()
+
+	return instance
 }
 
 func (h *Handler) Mux(pathStart string) *http.ServeMux {
@@ -162,6 +169,52 @@ func (h *Handler) route(conn *connection.Connection, message connection.Message)
 	}
 }
 
+// -----------------------------------------------------------------------
+
+func (h *Handler) processAsyncResponses() {
+	for {
+		select {
+		case response := <-h.gameService.AsyncResponse():
+			conn, exist := h.connectionStorage.GetConnection(response.ProfileId)
+			if !exist {
+				log.Println("connection does not exist")
+				continue
+			}
+
+			operation, exist := operationByServerBody(response.ServerBody)
+			if !exist {
+				log.Println("unknown operation")
+				continue
+			}
+
+			jsonBytes, err := dto.MakePackAsJsonBytes(
+				operation, response.ServerBody)
+
+			if err != nil {
+				h.closeGracefullyWithError(conn, h.processAsyncResponses, err)
+				continue
+			}
+
+			conn.Writer() <- connection.MakeTextMessage(jsonBytes)
+		}
+	}
+}
+
+func (h *Handler) processAsyncErrors() {
+	for {
+		select {
+		case response := <-h.gameService.AsyncResponseAboutError():
+			conn, exist := h.connectionStorage.GetConnection(response.ProfileId)
+			if exist {
+				h.closeGracefullyWithError(conn,
+					h.processAsyncErrors, response.Err)
+			} else {
+				log.Println("connection does not exist")
+			}
+		}
+	}
+}
+
 // hidden functions
 // -----------------------------------------------------------------------
 
@@ -176,4 +229,27 @@ func (h *Handler) closeGracefullyWithError(
 	err = utility.CreateCustomError(i, err)
 	err = utility.UnwrapErrorsToLast(err) // since the control message is limited!
 	conn.CloseGracefully(err.Error())
+}
+
+// -----------------------------------------------------------------------
+
+// bad solution?
+func operationByServerBody(i interface{}) (int, bool) {
+	switch i.(type) {
+	case serviceDto.SvrSearchingStartBody:
+		return dto.SEARCHING_START, true
+	case serviceDto.SvrSearchingGameFoundBody:
+		return dto.SEARCHING_GAME_FOUND, true
+
+	case serviceDto.SvrChattingNewMessageBody:
+		return dto.CHATTING_NEW_MESSAGE, true
+	case serviceDto.SvrChattingStageIsOverBody:
+		return dto.CHATTING_STAGE_IS_OVER, true
+
+	case serviceDto.SvrChoosingUsersChosenBody:
+		return dto.CHOOSING_USERS_CHOSEN, true
+	case serviceDto.SvrChoosingStageIsOverBody:
+		return dto.CHOOSING_STAGE_IS_OVER, true
+	}
+	return 0, false
 }

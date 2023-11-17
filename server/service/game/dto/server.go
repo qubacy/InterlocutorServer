@@ -25,6 +25,19 @@ type MatchedUser struct {
 	Contact string `json:"contact"`
 }
 
+func MakeMatchedUser(id int, contact string) MatchedUser {
+	return MatchedUser{
+		Id:      id,
+		Contact: contact,
+	}
+}
+
+type MatchedUserList []MatchedUser
+
+func (self MatchedUserList) AddMatchedUser(matchedUser MatchedUser) {
+	self = append(self, matchedUser)
+}
+
 type ProfilePublic struct {
 	Id       int    `json:"id"`
 	Username string `json:"username"`
@@ -122,8 +135,21 @@ func MakeSvrChattingNewMessageBodyEmpty() SvrChattingNewMessageBody {
 // -----------------------------------------------------------------------
 
 type SvrChattingStageIsOverBody struct{}
+
+func MakeSvrChattingStageIsOverBodyEmpty() SvrChattingStageIsOverBody {
+	return SvrChattingStageIsOverBody{}
+}
+
+// -----------------------------------------------------------------------
+
 type SvrChoosingUsersChosenBody struct{}
 
 type SvrChoosingStageIsOverBody struct {
 	MatchedUsers []MatchedUser `json:"matchedUsers"`
+}
+
+func MakeSvrChoosingStageIsOverBody(matchedUsers []MatchedUser) SvrChoosingStageIsOverBody {
+	return SvrChoosingStageIsOverBody{
+		MatchedUsers: matchedUsers,
+	}
 }

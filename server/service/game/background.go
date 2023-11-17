@@ -27,8 +27,10 @@ func (s *Service) updateRooms() {
 		switch room.State.(type) {
 		case domain.SearchingRoomState:
 			s.updateRoomWithSearchingState(room)
+
 		case domain.ChattingRoomState:
 			s.updateRoomWithChattingState(room)
+
 		case domain.ChoosingRoomState:
 			s.updateRoomWithChoosingState(room)
 
@@ -63,6 +65,7 @@ func (s *Service) updateRoomWithSearchingState(room *domain.Room) {
 		return
 	}
 
+	// prepare response pack.
 	foundGameDate := dto.MakeFoundGameData(0,
 		s.config.ChattingStageDuration,
 		s.config.ChoosingStageDuration,
@@ -87,8 +90,8 @@ func (s *Service) updateRoomWithSearchingState(room *domain.Room) {
 }
 
 func (s *Service) updateRoomWithChattingState(room *domain.Room) {
-	state := room.State.(domain.SearchingRoomState)
-	timeDifference := state.LaunchTime.Sub(time.Now())
+	state := room.State.(domain.ChattingRoomState)
+	timeDifference := time.Now().Sub(state.LaunchTime)
 
 	if timeDifference < s.config.ChattingStageDuration {
 		return
@@ -96,29 +99,10 @@ func (s *Service) updateRoomWithChattingState(room *domain.Room) {
 
 	// ***
 
-	// TODO: make или new функция
-	rs.Rooms[roomInx].State = &domain.ChoosingStateRoom{
-		RoomState: domain.RoomState{
-			Name:       domain.CHOOSING,
-			LaunchTime: time.Now(),
-		},
-		ProfileIdAndMatchedIds: make(map[string][]string),
-	}
-
-	// ***
-
-	for i := range rs.Rooms[roomInx].Profiles {
-		current := &rs.Rooms[roomInx].Profiles[i]
-		packBytes := overWsDto.MakePackBytes(
-			overWsDto.CHATTING_STAGE_IS_OVER,
-			overWsDto.SvrChattingStageIsOverBody{})
-
-		msg := UpdateRoomMessage{
-			ProfileId:   current.Id,
-			BytesResDto: packBytes,
-		}
-
-		rs.UpdateRoomMsgs <- msg
+	serverBody := dto.MakeSvrChattingStageIsOverBodyEmpty()
+	for i := range room.Profiles {
+		s.asyncResponseChan <- MakeAsyncResponse(
+			room.Profiles[i].Id, serverBody)
 	}
 
 	// ***
@@ -127,7 +111,57 @@ func (s *Service) updateRoomWithChattingState(room *domain.Room) {
 }
 
 func (s *Service) updateRoomWithChoosingState(room *domain.Room) {
+	state := room.State.(domain.ChoosingRoomState)
+	timeDifference := time.Now().Sub(state.LaunchTime)
 
+	if timeDifference < s.config.ChoosingStageDuration {
+		return
+	}
+
+	// ***
+
+	for _, currentProfile := range room.Profiles {
+		matchedUsers := dto.MatchedUserList{}
+		matchedProfileIds := state.MatchedProfileIdsForProfile[currentProfile.Id]
+
+		for _, matchedId := range matchedProfileIds {
+
+			// mutual selection check!
+			if containsElementInList(
+				currentProfile.Id,
+				state.MatchedProfileIdsForProfile[matchedId], // <--- selected ids of another user
+			) {
+				profileLocalId, exist := profileIdToLocal(matchedId, room)
+				if !exist {
+					s.handleError(room, ErrProfileIsNotLinkedToRoom) // <--- if the user disconnects
+					return
+				}
+
+				matchedProfile, exist := profileByLocalId(profileLocalId, room)
+				if !exist {
+					s.handleError(room, ErrProfileIsNotLinkedToRoom) // <--- impossible...
+					return
+				}
+
+				matchedUsers.AddMatchedUser(
+					dto.MakeMatchedUser(
+						profileLocalId,
+						matchedProfile.Contact,
+					),
+				)
+			}
+		}
+
+		serverBody := dto.MakeSvrChoosingStageIsOverBody(matchedUsers)
+		s.asyncResponseChan <- MakeAsyncResponse(
+			currentProfile.Id, serverBody)
+
+		// TODO: then disconnect the user?
+	}
+
+	// ***
+
+	s.gameStorage.UpdateRoomToNilState(room.Id)
 }
 
 // -----------------------------------------------------------------------
@@ -141,4 +175,13 @@ func (s *Service) handleError(room *domain.Room, err error) {
 	}
 
 	s.gameStorage.RemoveRoomById(room.Id)
+}
+
+func containsElementInList(value string, list []string) bool {
+	for i := range list {
+		if list[i] == value {
+			return true
+		}
+	}
+	return false
 }

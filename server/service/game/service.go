@@ -16,8 +16,8 @@ type Service struct {
 	controlStorage control.Storage
 	transactionMx  sync.Mutex // will help eliminate rare moments?
 
-	asyncResponseChan           chan<- AsyncResponse
-	asyncResponseAboutErrorChan chan<- AsyncResponseAboutError
+	asyncResponseChan           chan AsyncResponse
+	asyncResponseAboutErrorChan chan AsyncResponseAboutError
 }
 
 func NewService(
@@ -27,11 +27,13 @@ func NewService(
 	controlStorage control.Storage,
 ) *Service {
 	instance := &Service{
-		config:            config,
-		gameStorage:       gameStorage,
-		controlStorage:    controlStorage,
-		transactionMx:     sync.Mutex{},
-		asyncResponseChan: make(chan<- AsyncResponse, 9),
+		config:         config,
+		gameStorage:    gameStorage,
+		controlStorage: controlStorage,
+		transactionMx:  sync.Mutex{},
+
+		asyncResponseChan:           make(chan AsyncResponse, 9),
+		asyncResponseAboutErrorChan: make(chan AsyncResponseAboutError, 9),
 	}
 
 	go instance.backgroundUpdates(ctx)
@@ -39,6 +41,16 @@ func NewService(
 }
 
 // public
+// -----------------------------------------------------------------------
+
+func (s *Service) AsyncResponse() <-chan AsyncResponse {
+	return s.asyncResponseChan
+}
+
+func (s *Service) AsyncResponseAboutError() <-chan AsyncResponseAboutError {
+	return s.asyncResponseAboutErrorChan
+}
+
 // -----------------------------------------------------------------------
 
 func (s *Service) SearchingStart(profileId string, clientBody dto.CliSearchingStartBody) (
@@ -49,6 +61,8 @@ func (s *Service) SearchingStart(profileId string, clientBody dto.CliSearchingSt
 	}
 
 	// ***
+
+	// TODO: negative reaction if the user is already in the room
 
 	roomLanguage := clientBody.Profile.Language
 	room, exist := s.gameStorage.RoomWithSearchingState(roomLanguage)
@@ -93,6 +107,8 @@ func (s *Service) ChattingNewMessage(profileId string, clientBody dto.CliChattin
 
 	// ***
 
+	// TODO: negative reaction if the user is already in the room
+
 	room, exist := s.gameStorage.RoomWithProfile(profileId)
 	if !exist {
 		return dto.MakeSvrChattingNewMessageBodyEmpty(),
@@ -110,7 +126,7 @@ func (s *Service) ChattingNewMessage(profileId string, clientBody dto.CliChattin
 
 	// ***
 
-	profileLocalId, exist := profileIdToLocal(profileId, room)
+	profileLocalId, exist := profileIdToLocal(profileId, &room)
 	if !exist {
 		return dto.MakeSvrChattingNewMessageBodyEmpty(),
 			ErrProfileIsNotLinkedToRoom // <--- here impossible!
@@ -149,6 +165,8 @@ func (s *Service) ChoosingUsersChosen(
 		return ErrRoomIsNotInChoosingState
 	}
 
+	// TODO: negative reaction if the user is already in the room
+
 	// ***
 
 	matchedProfileIdsForProfile := []string{}
@@ -161,7 +179,7 @@ func (s *Service) ChoosingUsersChosen(
 	}
 
 	success := s.gameStorage.UpdateRoomWithChoosingState(
-		room.Id, profileId, matchedProfileIdsForProfile)
+		room.Id, profileId, matchedProfileIdsForProfile) // <--- influence!
 	if !success {
 		return ErrFailedToUpdateRoomWithChoosingState
 	}
@@ -178,7 +196,15 @@ func (s *Service) ProfileLeftGame(profileId string) {
 // hidden functions
 // -----------------------------------------------------------------------
 
-func profileIdToLocal(id string, room domain.Room) (int, bool) {
+func profileByLocalId(id int, room *domain.Room) (domain.Profile, bool) {
+	if id < 0 || id >= len(room.Profiles) {
+		return domain.Profile{}, false
+	}
+
+	return room.Profiles[id], true
+}
+
+func profileIdToLocal(id string, room *domain.Room) (int, bool) {
 	for i := range room.Profiles {
 		if room.Profiles[i].Id == id {
 			return i, true

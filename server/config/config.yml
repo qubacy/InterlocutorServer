@@ -10,7 +10,7 @@ room:
   max_profile_count: 6
 
 found_game:
-  chatting_stage_duration: 30m
+  chatting_stage_duration: 1m
   choosing_stage_duration: 15s
 
 background:
@@ -24,7 +24,7 @@ control_server:
   exchange:
       max_duration: 5s
   token:
-    duration: 5m
+    duration: 100m
     secret: "your_secret"
 
 debug_server:
