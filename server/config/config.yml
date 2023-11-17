@@ -10,8 +10,8 @@ room:
   max_profile_count: 6
 
 found_game:
-  chatting_stage_duration: 1m
-  choosing_stage_duration: 15s
+  chatting_stage_duration: 5s
+  choosing_stage_duration: 5s
 
 background:
   update_room:

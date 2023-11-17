@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"ilserver/delivery/ws/game/connection"
 	"ilserver/delivery/ws/game/dto"
 	"ilserver/pkg/utility"
@@ -124,7 +123,17 @@ func (h *Handler) ChattingNewMessage(conn *connection.Connection, pack dto.Pack)
 }
 
 func (h *Handler) ChoosingUsersChosen(conn *connection.Connection, pack dto.Pack) {
-	fmt.Println("ChoosingUsersChosen")
+	cliBody, err := pack.AsCliChoosingUsersChosenBody()
+	if err != nil {
+		h.closeGracefullyWithError(conn, h.ChoosingUsersChosen, err)
+		return
+	}
+
+	err = h.gameService.ChoosingUsersChosen(conn.Id(), cliBody)
+	if err != nil {
+		h.closeGracefullyWithError(conn, h.ChoosingUsersChosen, err)
+		return
+	}
 }
 
 // private
