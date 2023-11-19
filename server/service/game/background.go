@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"fmt"
 	domain "ilserver/domain/memory"
 	"ilserver/service/game/dto"
 	"time"
@@ -58,6 +59,7 @@ func (s *Service) updateRoomWithSearchingState(room *domain.Room) {
 
 	// ***
 
+	// TODO: update context.
 	topic, err := s.controlStorage.RandomTopic(
 		context.TODO(), room.Language)
 	if err != nil {
@@ -125,6 +127,7 @@ func (s *Service) updateRoomWithChoosingState(room *domain.Room) {
 		matchedProfileIds := state.MatchedProfileIdsForProfile[currentProfile.Id]
 
 		for _, matchedId := range matchedProfileIds {
+			fmt.Println(".")
 
 			// mutual selection check!
 			if containsElementInList(
@@ -143,7 +146,7 @@ func (s *Service) updateRoomWithChoosingState(room *domain.Room) {
 					return
 				}
 
-				matchedUsers.AddMatchedUser(
+				matchedUsers.Add(
 					dto.MakeMatchedUser(
 						profileLocalId,
 						matchedProfile.Contact,

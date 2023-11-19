@@ -104,22 +104,11 @@ func (h *Handler) ChattingNewMessage(conn *connection.Connection, pack dto.Pack)
 		return
 	}
 
-	svrBody, err := h.gameService.ChattingNewMessage(conn.Id(), cliBody)
+	err = h.gameService.ChattingNewMessage(conn.Id(), cliBody)
 	if err != nil {
 		h.closeGracefullyWithError(conn, h.ChattingNewMessage, err)
 		return
 	}
-
-	jsonBytes, err := dto.MakePackAsJsonBytes(dto.CHATTING_NEW_MESSAGE, svrBody)
-	if err != nil {
-		h.closeGracefullyWithError(conn, h.ChattingNewMessage, err)
-		return
-	}
-
-	// ***
-
-	// message to myself...
-	conn.Writer() <- connection.MakeTextMessage(jsonBytes)
 }
 
 func (h *Handler) ChoosingUsersChosen(conn *connection.Connection, pack dto.Pack) {

@@ -62,7 +62,11 @@ func (s *Service) SearchingStart(profileId string, clientBody dto.CliSearchingSt
 
 	// ***
 
-	// TODO: negative reaction if the user is already in the room
+	// user is already in the room...
+	_, exist := s.gameStorage.RoomWithProfile(profileId)
+	if exist {
+		return dto.SvrSearchingStartBody{}, nil
+	}
 
 	roomLanguage := clientBody.Profile.Language
 	room, exist := s.gameStorage.RoomWithSearchingState(roomLanguage)
@@ -71,7 +75,7 @@ func (s *Service) SearchingStart(profileId string, clientBody dto.CliSearchingSt
 		room, exist = s.gameStorage.RoomById(insertedId)
 
 		if !exist {
-			return dto.SvrSearchingStartBody{}, ErrRoomNotFound
+			return dto.MakeSvrSearchingStartBodyEmpty(), ErrRoomNotFound
 		}
 	}
 
@@ -80,11 +84,11 @@ func (s *Service) SearchingStart(profileId string, clientBody dto.CliSearchingSt
 	profile := clientBody.Profile.ToDomain(profileId)
 	inserted := s.gameStorage.InsertProfileToRoomWithoutAssignId(profile, room.Id)
 	if !inserted {
-		return dto.SvrSearchingStartBody{}, ErrFailedToAddProfileToRoom
+		return dto.MakeSvrSearchingStartBodyEmpty(), ErrFailedToAddProfileToRoom
 	}
 	success := s.gameStorage.UpdateRoomWithSearchingRoomState(room.Id, time.Now())
 	if !success {
-		return dto.SvrSearchingStartBody{}, ErrFailedToUpdateRoomWithSearchingState
+		return dto.MakeSvrSearchingStartBodyEmpty(), ErrFailedToUpdateRoomWithSearchingState
 	}
 
 	// ***
@@ -97,39 +101,30 @@ func (s *Service) SearchingStop(profileId string, clientBody dto.CliSearchingSto
 	return nil
 }
 
-func (s *Service) ChattingNewMessage(profileId string, clientBody dto.CliChattingNewMessageBody) (
-	dto.SvrChattingNewMessageBody, error,
-) {
+func (s *Service) ChattingNewMessage(profileId string, clientBody dto.CliChattingNewMessageBody) error {
 	if !clientBody.IsValid() {
-		return dto.MakeSvrChattingNewMessageBodyEmpty(),
-			ErrInvalidClientPackBody
+		return ErrInvalidClientPackBody
 	}
 
 	// ***
 
-	// TODO: negative reaction if the user is already in the room
-
 	room, exist := s.gameStorage.RoomWithProfile(profileId)
 	if !exist {
-		return dto.MakeSvrChattingNewMessageBodyEmpty(),
-			ErrProfileIsNotLinkedToRoom
+		return ErrProfileIsNotLinkedToRoom
 	}
 	roomStateName, exist := room.StateName()
 	if !exist {
-		return dto.MakeSvrChattingNewMessageBodyEmpty(),
-			ErrRoomInUnknownState
+		return ErrRoomInUnknownState
 	}
 	if roomStateName != domain.CHATTING {
-		return dto.MakeSvrChattingNewMessageBodyEmpty(),
-			ErrRoomIsNotInChattingState
+		return nil // or ErrRoomIsNotInChattingState?
 	}
 
 	// ***
 
 	profileLocalId, exist := profileIdToLocal(profileId, &room)
 	if !exist {
-		return dto.MakeSvrChattingNewMessageBodyEmpty(),
-			ErrProfileIsNotLinkedToRoom // <--- here impossible!
+		return ErrProfileIsNotLinkedToRoom // <--- here impossible!
 	}
 	serverBody := dto.MakeSvrChattingNewMessageBodyFromParts(
 		profileLocalId, clientBody.Message.Text,
@@ -139,15 +134,11 @@ func (s *Service) ChattingNewMessage(profileId string, clientBody dto.CliChattin
 
 	for i := range room.Profiles {
 		currentProfile := &room.Profiles[i]
-		if currentProfile.Id == profileId {
-			continue
-		}
-
 		s.asyncResponseChan <- MakeAsyncResponse(
 			currentProfile.Id, serverBody)
 	}
 
-	return serverBody, nil
+	return nil
 }
 
 func (s *Service) ChoosingUsersChosen(
@@ -162,10 +153,8 @@ func (s *Service) ChoosingUsersChosen(
 		return ErrRoomInUnknownState
 	}
 	if roomStateName != domain.CHOOSING {
-		return ErrRoomIsNotInChoosingState
+		return nil // or ErrRoomIsNotInChoosingState?
 	}
-
-	// TODO: negative reaction if the user is already in the room
 
 	// ***
 

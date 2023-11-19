@@ -20,6 +20,8 @@ func MakeSvrMessage(senderId int, text string) SvrMessage {
 	}
 }
 
+// -----------------------------------------------------------------------
+
 type MatchedUser struct {
 	Id      int    `json:"id"`
 	Contact string `json:"contact"`
@@ -34,9 +36,11 @@ func MakeMatchedUser(id int, contact string) MatchedUser {
 
 type MatchedUserList []MatchedUser
 
-func (self MatchedUserList) AddMatchedUser(matchedUser MatchedUser) {
-	self = append(self, matchedUser)
+func (self *MatchedUserList) Add(matchedUser MatchedUser) {
+	*self = append(*self, matchedUser)
 }
+
+// -----------------------------------------------------------------------
 
 type ProfilePublic struct {
 	Id       int    `json:"id"`
@@ -53,6 +57,8 @@ func MakeProfilePublic(id int, username string) ProfilePublic {
 func MakeProfilePublicList() []ProfilePublic {
 	return []ProfilePublic{}
 }
+
+// -----------------------------------------------------------------------
 
 type FoundGameData struct {
 	LocalProfileId        int    `json:"localProfileId"`
