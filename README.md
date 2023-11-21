@@ -15,3 +15,4 @@
 - Как работать с ошибками бизнес-логики через HTTP // mitya_k / URL: https://habr.com/ru/articles/545524/
 - HTTP // Anton Elmanov / URL: https://golangforall.com/ru/post/http.html
 - Важные концепции обработчиков веб-серверов в Golang // Uproger / URL: https://uproger.com/vazhnye-konczepczii-obrabotchikov-veb-serverov-v-golang/
+- Graceful Shutdown или как красиво уйти // Сапогов Никита / URL: https://www.youtube.com/watch?v=ASiF-AH7GFc

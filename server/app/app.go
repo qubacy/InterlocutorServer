@@ -1,7 +1,12 @@
 package app
 
 import (
+	"context"
 	"ilserver/config"
+	controlStorage "ilserver/storage/control/impl/sql/sqlite"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"log"
 	"net/http"
@@ -17,9 +22,12 @@ func Run() {
 
 	// *** create dependencies...
 
+	ctxForGameServer, stopGameServer :=
+		context.WithCancel(context.Background())
+
 	serveMux := http.NewServeMux()
 	serveMux.Handle(runControlServer())
-	serveMux.Handle(runGameServer())
+	serveMux.Handle(runGameServer(ctxForGameServer))
 
 	httpServer := &http.Server{
 		Addr:           ":" + viper.GetString("port"),
@@ -29,10 +37,34 @@ func Run() {
 		Handler:        serveMux,
 	}
 
-	// ***
+	// *** start
 
-	err := httpServer.ListenAndServe()
+	go func() {
+		err := httpServer.ListenAndServe()
+		if err != nil {
+			log.Fatalf("Server start failed. Err: %v", err)
+		}
+	}()
+	log.Println("Server started")
+
+	// *** graceful shutdown?
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+
+	<-quit
+	log.Println("Server shutting down")
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(), viper.GetDuration("shutdown_timeout"))
+	defer cancel()
+
+	// *** closing everything in some order
+
+	stopGameServer()
+	err := httpServer.Shutdown(ctx)
 	if err != nil {
-		log.Fatalf("Server start failed. Err: %v", err.Error())
+		log.Fatalf("Server stop failed. Err: %v", err)
 	}
+	controlStorage.Free()
 }

@@ -61,7 +61,7 @@ func Test_HasAdminByLogin(t *testing.T) {
 }
 
 func Test_AllAdmins(t *testing.T) {
-	// TODO:
+	// TODO: or enough?
 }
 
 // private help functions.

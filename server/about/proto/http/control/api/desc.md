@@ -14,7 +14,7 @@
 
 <!-- --------------------------------------------------------------------- -->
 
-## POST control/api/sign-in
+## POST /control/api/sign-in
 
 ### Request body
 ```json
@@ -34,12 +34,12 @@
 
 <!-- --------------------------------------------------------------------- -->
 
-## GET control/api/admin
+## GET /control/api/admin
 
 ### Request headers
 | Key | Value Type |
 |-----|------------|
-| access-token | Bearer `jwt-string` | 
+| Authorization | Bearer `jwt-string` | 
 
 ### Responses
 - *200*
@@ -55,12 +55,12 @@
 }
 ```
 
-## POST control/api/admin
+## POST /control/api/admin
 
 ### Request headers
 | Key | Value Type |
 |-----|------------|
-| access-token | Bearer `jwt-string` | 
+| Authorization | Bearer `jwt-string` | 
 
 ### Request body
 ```json
@@ -74,15 +74,21 @@
 
 ### Responses
 - *200*
+```json
+{
+    "idr": "<int>"
+}
+
+```
 
 <!-- --------------------------------------------------------------------- -->
 
-## GET control/api/topic
+## GET /control/api/topic
 
 ### Request headers
 | Key | Value Type |
 |-----|------------|
-| access-token | Bearer `jwt-string` | 
+| Authorization | Bearer `jwt-string` | 
 
 ### Responses
 - *200*
@@ -99,11 +105,11 @@
 }
 ```
 
-## POST control/api/topic
+## POST /control/api/topic
 ### Request headers
 | Key | Value Type |
 |-----|------------|
-| access-token | Bearer `jwt-string` | 
+| Authorization | Bearer `jwt-string` | 
 
 ### Request body
 ```json

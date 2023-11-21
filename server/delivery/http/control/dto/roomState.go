@@ -42,23 +42,30 @@ func makeChattingRoomState(state domain.ChattingRoomState) ChattingRoomState {
 }
 
 type ChoosingRoomState struct {
-	RoomState
-	ProfileIdAndMatchedIds map[string][]string // ?
+	RoomState                   `json:"room-state"`
+	MatchedProfileIdsForProfile map[string][]string `json:"matched-profile-ids-for-profile"`
 }
 
-func makeChoosingRoomState(domain.ChoosingRoomState) ChoosingRoomState {
-	return ChoosingRoomState{} // TODO:
+func makeChoosingRoomState(state domain.ChoosingRoomState) ChoosingRoomState {
+	return ChoosingRoomState{
+		RoomState:                   makeRoomState(state.RoomState),
+		MatchedProfileIdsForProfile: state.MatchedProfileIdsForProfile,
+	}
 }
 
 // no check... Checks the top level
 func MakeRoomState(i interface{}) interface{} {
 	switch value := i.(type) {
+
 	case domain.SearchingRoomState:
 		return makeSearchingRoomState(value)
+
 	case domain.ChattingRoomState:
 		return makeChattingRoomState(value)
+
 	case domain.ChoosingRoomState:
 		return makeChoosingRoomState(value)
+
 	}
 	return nil
 }

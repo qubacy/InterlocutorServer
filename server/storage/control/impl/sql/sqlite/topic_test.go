@@ -160,7 +160,7 @@ func Test_RandomTopic(t *testing.T) {
 // -----------------------------------------------------------------------
 
 func Test_DeleteTopic(t *testing.T) {
-	// TODO:
+	// TODO: or enough?
 }
 
 // private help functions.

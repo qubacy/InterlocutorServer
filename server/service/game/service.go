@@ -21,7 +21,7 @@ type Service struct {
 }
 
 func NewService(
-	ctx context.Context,
+	ctxWithCancel context.Context,
 	config Config,
 	gameStorage *game.Storage,
 	controlStorage control.Storage,
@@ -36,7 +36,7 @@ func NewService(
 		asyncResponseAboutErrorChan: make(chan AsyncResponseAboutError, 9),
 	}
 
-	go instance.backgroundUpdates(ctx)
+	go instance.backgroundUpdates(ctxWithCancel)
 	return instance
 }
 

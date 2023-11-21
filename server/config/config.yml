@@ -1,4 +1,5 @@
 port: "47777"
+shutdown_timeout: 7s
 
 # main logic (app)
 # -----------------------------------------------
@@ -15,6 +16,7 @@ found_game:
 
 background:
   update_room:
+    max_duration: 5s
     with_searching_state:
       interval_from_last_update_to_next_state: 10s
 

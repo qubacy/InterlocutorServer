@@ -2,7 +2,6 @@ package game
 
 import (
 	"context"
-	"fmt"
 	domain "ilserver/domain/memory"
 	"ilserver/service/game/dto"
 	"time"
@@ -10,7 +9,7 @@ import (
 
 func (s *Service) backgroundUpdates(ctx context.Context) {
 	timeout := s.config.TimeoutForUpdateRooms
-	for {
+	for { // <--- endless!
 		select {
 		case <-time.After(timeout):
 			s.updateRooms()
@@ -59,9 +58,12 @@ func (s *Service) updateRoomWithSearchingState(room *domain.Room) {
 
 	// ***
 
-	// TODO: update context.
+	ctx, cancel := context.WithTimeout(context.Background(),
+		s.config.RoomUpdateDuration)
+	defer cancel()
+
 	topic, err := s.controlStorage.RandomTopic(
-		context.TODO(), room.Language)
+		ctx, room.Language)
 	if err != nil {
 		s.handleError(room, err)
 		return
@@ -127,7 +129,6 @@ func (s *Service) updateRoomWithChoosingState(room *domain.Room) {
 		matchedProfileIds := state.MatchedProfileIdsForProfile[currentProfile.Id]
 
 		for _, matchedId := range matchedProfileIds {
-			fmt.Println(".")
 
 			// mutual selection check!
 			if containsElementInList(
@@ -159,7 +160,7 @@ func (s *Service) updateRoomWithChoosingState(room *domain.Room) {
 		s.asyncResponseChan <- MakeAsyncResponse(
 			currentProfile.Id, serverBody)
 
-		// TODO: then disconnect the user?
+		// TODO: then disconnect the user? The client can be the initiator...
 	}
 
 	// ***

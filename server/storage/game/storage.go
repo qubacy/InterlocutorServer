@@ -27,6 +27,7 @@ func Instance() *Storage {
 	once.Do(func() {
 		instance = NewStorage()
 	})
+
 	return instance
 }
 

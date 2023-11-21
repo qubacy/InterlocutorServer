@@ -12,13 +12,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-func runGameServer() (string, *http.ServeMux) {
+func runGameServer(ctxWithCancel context.Context) (string, *http.ServeMux) {
 	controlStorageObj, err := controlStorage.Instance()
 	if err != nil {
 		log.Fatal("Failed to get instance. Err:", err)
 	}
 
 	options := service.Config{
+		RoomUpdateDuration: viper.GetDuration(
+			"background" +
+				".update_room" +
+				".max_duration",
+		),
 		TimeoutForUpdateRooms: viper.GetDuration("update_rooms.timeout"),
 		IntervalFromLastUpdateToNextState: viper.GetDuration(
 			"background" +
@@ -34,7 +39,7 @@ func runGameServer() (string, *http.ServeMux) {
 
 	gameHandler := delivery.NewHandler(
 		service.NewService(
-			context.TODO(),
+			ctxWithCancel,
 			options,
 			gameStorage.Instance(),
 			controlStorageObj,

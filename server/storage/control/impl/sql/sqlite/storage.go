@@ -39,7 +39,7 @@ func Instance() (*Storage, error) {
 	return instance, initializationError
 }
 func Free() {
-	// TODO: что делать с ошибкой?
+	// TODO: what to do with the error?
 	if instance != nil {
 		instance.db.Close()
 	}
