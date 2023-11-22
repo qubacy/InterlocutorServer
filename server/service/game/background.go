@@ -44,15 +44,21 @@ func (s *Service) updateRooms() {
 // -----------------------------------------------------------------------
 
 func (s *Service) updateRoomWithSearchingState(room *domain.Room) {
-	if len(room.Profiles) < 2 {
-		return
-	}
 	state := room.State.(domain.SearchingRoomState)
 
 	// ***
 
 	interval := time.Now().Sub(state.LastUpdateTime)
 	if interval < s.config.IntervalFromLastUpdateToNextState {
+		return
+	}
+
+	if len(room.Profiles) == 0 {
+		s.gameStorage.RemoveRoomById(room.Id)
+		return
+	}
+
+	if len(room.Profiles) < 2 {
 		return
 	}
 
@@ -94,6 +100,11 @@ func (s *Service) updateRoomWithSearchingState(room *domain.Room) {
 }
 
 func (s *Service) updateRoomWithChattingState(room *domain.Room) {
+	if len(room.Profiles) == 0 {
+		s.gameStorage.RemoveRoomById(room.Id)
+		return
+	}
+
 	state := room.State.(domain.ChattingRoomState)
 	timeDifference := time.Now().Sub(state.LaunchTime)
 
@@ -115,6 +126,11 @@ func (s *Service) updateRoomWithChattingState(room *domain.Room) {
 }
 
 func (s *Service) updateRoomWithChoosingState(room *domain.Room) {
+	if len(room.Profiles) == 0 {
+		s.gameStorage.RemoveRoomById(room.Id)
+		return
+	}
+
 	state := room.State.(domain.ChoosingRoomState)
 	timeDifference := time.Now().Sub(state.LaunchTime)
 

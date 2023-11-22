@@ -15,7 +15,7 @@ type Storage struct {
 
 func NewStorage() *Storage {
 	return &Storage{
-		rwMutex: sync.RWMutex{},
+		rwMutex: sync.RWMutex{}, // <--- methods with external control are needed!
 		rooms:   domain.RoomList{},
 	}
 }
@@ -52,13 +52,13 @@ func (s *Storage) RoomById(id string) (domain.Room, bool) {
 	return domain.Room{}, false
 }
 
-func (s *Storage) RoomWithSearchingState(language int) (domain.Room, bool) {
+func (s *Storage) RoomWithSearchingState(language, maxProfileCount int) (domain.Room, bool) {
 	s.rwMutex.RLock()
 	defer s.rwMutex.RUnlock()
 
 	for i := range s.rooms {
 		room := &s.rooms[i]
-		if room.Language == language {
+		if room.Language == language && len(room.Profiles) < maxProfileCount {
 			_, converted :=
 				room.State.(domain.SearchingRoomState)
 

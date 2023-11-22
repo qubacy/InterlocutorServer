@@ -44,5 +44,5 @@ func (self *Room) StateName() (StateName, bool) {
 	case ChoosingRoomState:
 		return CHOOSING, true
 	}
-	return 0, false
+	return 0, false // <--- name cannot be used!
 }

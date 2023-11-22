@@ -14,7 +14,7 @@ type Service struct {
 	config         Config
 	gameStorage    *game.Storage // <--- impl
 	controlStorage control.Storage
-	transactionMx  sync.Mutex // will help eliminate rare moments?
+	transactionMx  sync.Mutex // will help eliminate rare moments? See storage.
 
 	asyncResponseChan           chan AsyncResponse
 	asyncResponseAboutErrorChan chan AsyncResponseAboutError
@@ -53,6 +53,10 @@ func (s *Service) AsyncResponseAboutError() <-chan AsyncResponseAboutError {
 
 // -----------------------------------------------------------------------
 
+// problem with simultaneous connection of users (not critical).
+// may result in rooms being created when others are already available (mutex).
+// need to use transactions/locks for multiple operations...
+
 func (s *Service) SearchingStart(profileId string, clientBody dto.CliSearchingStartBody) (
 	dto.SvrSearchingStartBody, error,
 ) {
@@ -69,7 +73,9 @@ func (s *Service) SearchingStart(profileId string, clientBody dto.CliSearchingSt
 	}
 
 	roomLanguage := clientBody.Profile.Language
-	room, exist := s.gameStorage.RoomWithSearchingState(roomLanguage)
+	room, exist := s.gameStorage.RoomWithSearchingState(
+		roomLanguage, s.config.MaxProfileCountInRoom)
+
 	if !exist {
 		insertedId := s.gameStorage.InsertRoomWithSearchingState(roomLanguage)
 		room, exist = s.gameStorage.RoomById(insertedId)
@@ -179,7 +185,17 @@ func (s *Service) ChoosingUsersChosen(
 // -----------------------------------------------------------------------
 
 func (s *Service) ProfileLeftGame(profileId string) {
-	s.gameStorage.RemoveProfileById(profileId)
+	room, exist := s.gameStorage.RoomWithProfile(profileId)
+	if exist {
+		s.gameStorage.RemoveProfileById(profileId)
+		roomStateName, exist := room.StateName()
+		if exist && roomStateName == domain.SEARCHING {
+
+			// ignore result.
+			s.gameStorage.UpdateRoomWithSearchingRoomState(
+				room.Id, time.Now())
+		}
+	}
 }
 
 // hidden functions

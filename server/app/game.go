@@ -33,6 +33,7 @@ func runGameServer(ctxWithCancel context.Context) (string, *http.ServeMux) {
 		),
 		ChattingStageDuration: viper.GetDuration("found_game.chatting_stage_duration"),
 		ChoosingStageDuration: viper.GetDuration("found_game.choosing_stage_duration"),
+		MaxProfileCountInRoom: viper.GetInt("room.max_profile_count"),
 	}
 
 	// dependency injection.
